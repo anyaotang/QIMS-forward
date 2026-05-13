@@ -6,7 +6,7 @@ export interface ApiResponse<T = unknown> {
 }
 
 export interface PageResult<T> {
-  list: T[]
+  records: T[]
   total: number
   page: number
   pageSize: number
@@ -68,6 +68,7 @@ export interface DepartmentTreeNode {
   parentId?: number
   orderNum?: number
   children?: DepartmentTreeNode[]
+
   [key: string]: unknown
 }
 
@@ -81,6 +82,7 @@ export interface NodeTreeNode {
   orderNum?: number
   description?: string
   children?: NodeTreeNode[]
+
   [key: string]: unknown
 }
 

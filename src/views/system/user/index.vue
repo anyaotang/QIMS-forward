@@ -37,7 +37,7 @@ async function loadTable() {
   try {
     const res = await userApi.list(queryForm)
     const data = extractData(res)
-    tableData.value = data.list
+    tableData.value = data.records
     total.value = data.total
   } finally {
     loading.value = false

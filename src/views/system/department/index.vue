@@ -1,24 +1,22 @@
 <script setup lang="ts">
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {extractData} from '@/utils/request'
-import type {DepartmentTreeNode} from '@/types/api'
-import {departmentApi} from "@/api/department";
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { extractData } from '@/utils/request'
+import type { DepartmentTreeNode } from '@/types/api'
+import { departmentApi } from '@/api/department'
 
 const loading = ref(false)
 const treeData = ref<DepartmentTreeNode[]>([])
 const dialogVisible = ref(false)
 const formData = ref<{
-  id?: number;
-  name: string;
-  parentId: number | null;
-  orderNum: number;
-  leader: string;
+  id?: number
+  name: string
+  parentId: number | null
+  orderNum: number
+  leader: string
   phone: string
-}>(
-  {name: '', parentId: null, orderNum: 0, leader: '', phone: ''}
-)
+}>({ name: '', parentId: null, orderNum: 0, leader: '', phone: '' })
 const formRef = ref()
-const rules = {name: [{required: true, message: '请输入部门名称', trigger: 'blur'}]}
+const rules = { name: [{ required: true, message: '请输入部门名称', trigger: 'blur' }] }
 
 onMounted(loadTree)
 
@@ -39,7 +37,7 @@ function openAdd(parentId?: number) {
     parentId: parentId ?? null,
     orderNum: 0,
     leader: '',
-    phone: ''
+    phone: '',
   }
   dialogVisible.value = true
 }
@@ -51,7 +49,7 @@ function openEdit(row: DepartmentTreeNode) {
     parentId: row.parentId ?? null,
     orderNum: row.orderNum ?? 0,
     leader: (row as any).leader || '',
-    phone: (row as any).phone || ''
+    phone: (row as any).phone || '',
   }
   dialogVisible.value = true
 }
@@ -68,12 +66,13 @@ async function handleSave() {
     ElMessage.success('保存成功')
     dialogVisible.value = false
     loadTree()
-  } catch { /* interceptor */
+  } catch {
+    /* interceptor */
   }
 }
 
 async function handleDelete(row: DepartmentTreeNode) {
-  await ElMessageBox.confirm('确定删除该部门？', '提示', {type: 'warning'})
+  await ElMessageBox.confirm('确定删除该部门？', '提示', { type: 'warning' })
   await departmentApi.delete(row.id)
   ElMessage.success('删除成功')
   loadTree()
@@ -100,37 +99,50 @@ async function handleDelete(row: DepartmentTreeNode) {
           <div class="tree-node">
             <span class="node-label">{{ data.name }}</span>
             <span class="node-actions">
-              <el-button type="primary" link size="small"
-                         @click.stop="openAdd(data.id)">新增子部门</el-button>
-              <el-button type="primary" link size="small"
-                         @click.stop="openEdit(data)">编辑</el-button>
-              <el-button type="danger" link size="small"
-                         @click.stop="handleDelete(data)">删除</el-button>
+              <el-button type="primary" link size="small" @click.stop="openAdd(data.id)"
+                >新增子部门</el-button
+              >
+              <el-button type="primary" link size="small" @click.stop="openEdit(data)"
+                >编辑</el-button
+              >
+              <el-button type="danger" link size="small" @click.stop="handleDelete(data)"
+                >删除</el-button
+              >
             </span>
           </div>
         </template>
       </el-tree>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="formData.id ? '编辑部门' : '新增部门'" width="480px"
-               destroy-on-close>
+    <el-dialog
+      v-model="dialogVisible"
+      :title="formData.id ? '编辑部门' : '新增部门'"
+      width="480px"
+      destroy-on-close
+    >
       <el-form ref="formRef" :model="formData" :rules="rules" label-width="90">
         <el-form-item label="部门名称" prop="name">
-          <el-input v-model="formData.name"/>
+          <el-input v-model="formData.name" />
         </el-form-item>
         <el-form-item label="上级部门">
-          <el-tree-select v-model="formData.parentId" :data="treeData"
-                          :props="{ label: 'name', value: 'id', children: 'children' }"
-                          placeholder="顶级部门" clearable check-strictly style="width:100%"/>
+          <el-tree-select
+            v-model="formData.parentId"
+            :data="treeData"
+            :props="{ label: 'name', value: 'id', children: 'children' }"
+            placeholder="顶级部门"
+            clearable
+            check-strictly
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="排序">
-          <el-input-number v-model="formData.orderNum" :min="0"/>
+          <el-input-number v-model="formData.orderNum" :min="0" />
         </el-form-item>
         <el-form-item label="负责人">
-          <el-input v-model="formData.leader"/>
+          <el-input v-model="formData.leader" />
         </el-form-item>
         <el-form-item label="联系电话">
-          <el-input v-model="formData.phone"/>
+          <el-input v-model="formData.phone" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -161,9 +173,5 @@ async function handleDelete(row: DepartmentTreeNode) {
     display: flex;
     gap: 4px;
   }
-}
-
-.page-table {
-  padding: 0;
 }
 </style>

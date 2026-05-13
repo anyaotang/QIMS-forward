@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {extractData} from '@/utils/request'
-import type {NodeTreeNode, NodeForm} from '@/types/api'
-import {nodeApi} from "@/api/node";
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { extractData } from '@/utils/request'
+import type { NodeTreeNode, NodeForm } from '@/types/api'
+import { nodeApi } from '@/api/node'
 
 const loading = ref(false)
 const treeData = ref<NodeTreeNode[]>([])
@@ -14,14 +14,14 @@ const formData = reactive<NodeForm>({
   parentId: null,
   type: 0,
   orderNum: 0,
-  description: ''
+  description: '',
 })
-const rules = {name: [{required: true, message: '请输入节点名称', trigger: 'blur'}]}
+const rules = { name: [{ required: true, message: '请输入节点名称', trigger: 'blur' }] }
 const typeOptions = [
-  {label: '根节点', value: 0},
-  {label: '区域', value: 1},
-  {label: '产线', value: 2},
-  {label: '工位', value: 3},
+  { label: '根节点', value: 0 },
+  { label: '区域', value: 1 },
+  { label: '产线', value: 2 },
+  { label: '工位', value: 3 },
 ]
 
 onMounted(loadTree)
@@ -44,7 +44,7 @@ function openAdd(parentId?: number, type = 0) {
     parentId: parentId ?? null,
     type,
     orderNum: 0,
-    description: ''
+    description: '',
   })
   dialogVisible.value = true
 }
@@ -57,7 +57,7 @@ function openEdit(row: NodeTreeNode) {
     parentId: row.parentId ?? null,
     type: row.type ?? 0,
     orderNum: row.orderNum ?? 0,
-    description: row.description || ''
+    description: row.description || '',
   })
   dialogVisible.value = true
 }
@@ -74,12 +74,13 @@ async function handleSave() {
     ElMessage.success('保存成功')
     dialogVisible.value = false
     loadTree()
-  } catch { /* interceptor */
+  } catch {
+    /* interceptor */
   }
 }
 
 async function handleDelete(row: NodeTreeNode) {
-  await ElMessageBox.confirm('确定删除该节点？', '提示', {type: 'warning'})
+  await ElMessageBox.confirm('确定删除该节点？', '提示', { type: 'warning' })
   await nodeApi.delete(row.id)
   ElMessage.success('删除成功')
   loadTree()
@@ -106,24 +107,28 @@ async function handleDelete(row: NodeTreeNode) {
         <template #default="{ data }">
           <div class="tree-node">
             <div class="node-info">
-              <el-tag size="small" type="info" style="margin-right:8px">
+              <el-tag size="small" type="info" style="margin-right: 8px">
                 {{
-                  typeOptions.find((t: {
-                    label: string;
-                    value: number
-                  }) => t.value === data.type)?.label || '节点'
+                  typeOptions.find((t: { label: string; value: number }) => t.value === data.type)
+                    ?.label || '节点'
                 }}
               </el-tag>
               <span class="node-name">{{ data.name }}</span>
               <span v-if="data.code" class="node-code">{{ data.code }}</span>
             </div>
             <div class="node-actions">
-              <el-button type="primary" link size="small"
-                         @click.stop="openAdd(data.id, (data.type ?? 0) + 1)">新增子节点
+              <el-button
+                type="primary"
+                link
+                size="small"
+                @click.stop="openAdd(data.id, (data.type ?? 0) + 1)"
+                >新增子节点
               </el-button>
-              <el-button type="primary" link size="small" @click.stop="openEdit(data)">编辑
+              <el-button type="primary" link size="small" @click.stop="openEdit(data)"
+                >编辑
               </el-button>
-              <el-button type="danger" link size="small" @click.stop="handleDelete(data)">删除
+              <el-button type="danger" link size="small" @click.stop="handleDelete(data)"
+                >删除
               </el-button>
             </div>
           </div>
@@ -132,31 +137,45 @@ async function handleDelete(row: NodeTreeNode) {
       <div class="drag-tip">💡 拖拽节点可调整归属</div>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="formData.id ? '编辑节点' : '新增节点'" width="520px"
-               destroy-on-close>
+    <el-dialog
+      v-model="dialogVisible"
+      :title="formData.id ? '编辑节点' : '新增节点'"
+      width="520px"
+      destroy-on-close
+    >
       <el-form ref="formRef" :model="formData" :rules="rules" label-width="90">
         <el-form-item label="节点名称" prop="name">
-          <el-input v-model="formData.name"/>
+          <el-input v-model="formData.name" />
         </el-form-item>
         <el-form-item label="节点编码">
-          <el-input v-model="formData.code"/>
+          <el-input v-model="formData.code" />
         </el-form-item>
         <el-form-item label="节点类型">
-          <el-select v-model="formData.type" style="width:100%">
-            <el-option v-for="opt in typeOptions" :key="opt.value" :label="opt.label"
-                       :value="opt.value"/>
+          <el-select v-model="formData.type" style="width: 100%">
+            <el-option
+              v-for="opt in typeOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="上级节点">
-          <el-tree-select v-model="formData.parentId" :data="treeData"
-                          :props="{ label: 'name', value: 'id', children: 'children' }"
-                          placeholder="顶级节点" clearable check-strictly style="width:100%"/>
+          <el-tree-select
+            v-model="formData.parentId"
+            :data="treeData"
+            :props="{ label: 'name', value: 'id', children: 'children' }"
+            placeholder="顶级节点"
+            clearable
+            check-strictly
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="排序">
-          <el-input-number v-model="formData.orderNum" :min="0"/>
+          <el-input-number v-model="formData.orderNum" :min="0" />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="formData.description" type="textarea" :rows="3"/>
+          <el-input v-model="formData.description" type="textarea" :rows="3" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -207,9 +226,5 @@ async function handleDelete(row: NodeTreeNode) {
   color: #909399;
   border-top: 1px solid #f0f0f0;
   margin-top: 8px;
-}
-
-.page-table {
-  padding: 0;
 }
 </style>

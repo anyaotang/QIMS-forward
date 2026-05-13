@@ -101,6 +101,7 @@ export const useUserStore = defineStore('user', () => {
       const res = await authApi.menus()
       const data = extractData(res) as MenuDTO[]
       menus.value = data || []
+      console.log(data)
       return data
     } catch (e) {
       console.error('[UserStore] fetchMenus failed:', e)

@@ -26,64 +26,16 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
-// 图标映射（权限编码 → Element Plus 图标）
-const iconMap: Record<string, any> = {
-  system:        Setting,
-  inspection:    DataAnalysis,
-  item_group:    DocumentChecked,
-  record_group:  List,
-  'plan:manage': Memo,
-  'log:view':     ChatDotRound,
-  'dept:manage':  OfficeBuilding,
-  'user:manage':  User,
-  'role:manage':  Key,
-  'perm:manage':  Connection,
-  'node:manage':  Connection,
-  'node:view':    Connection,
-  'item:manage':  DocumentChecked,
-  'item:view':    DocumentChecked,
-  'record:manual':Edit,
-  'record:view':  List,
-  'report:view':  TrendCharts,
-  'report:export':DataLine,
+// 图标名 → Element Plus 图标组件映射
+const iconComponents: Record<string, any> = {
+  Setting, DataAnalysis, DataLine, Memo, User,
+  OfficeBuilding, Key, Connection, DocumentChecked,
+  List, Edit, TrendCharts, Tickets, ChatDotRound,
 }
 
-// 路由路径映射（权限编码 → 前端路由 path）
-const routeMap: Record<string, string> = {
-  // 系统管理
-  'dept:manage':   '/system/department',
-  'user:manage':   '/system/user',
-  'role:manage':   '/system/role',
-  'perm:manage':   '/system/role',
-  // 质量检测
-  'node:manage':   '/quality/node',
-  'node:view':     '/quality/node',
-  // 检测项
-  'item:manage':   '/quality/inspection-item',
-  'item:view':     '/quality/inspection-item',
-  // 检测记录
-  'record:manual': '/quality/manual-entry',
-  'record:view':   '/quality/inspection-record',
-  // 报表
-  'report:view':   '/report/quality',
-  'report:export': '/report/quality',
-  // 方案
-  'plan:manage':   '/implementation/plan',
-  // 日志（按钮，无路由）
-}
-
-function getIcon(code?: string) {
-  if (!code) return null
-  return iconMap[code] || iconMap[code.replace(':', '')] || null
-}
-
-function getRoutePath(code?: string): string | undefined {
-  if (!code) return undefined
-  return routeMap[code]
-}
-
-function isActive(path: string) {
-  return route.path.startsWith(path)
+function resolveIcon(iconName?: string) {
+  if (!iconName) return null
+  return iconComponents[iconName] || null
 }
 
 function navigateTo(path: string) {
@@ -95,7 +47,7 @@ const menuTree = computed<MenuDTO[]>(() => userStore.menus || [])
 
 // 判断是否为叶子节点（有可点击路由）
 function isLeaf(menu: MenuDTO): boolean {
-  return !!getRoutePath(menu.code)
+  return !!menu.path
 }
 </script>
 
@@ -132,7 +84,7 @@ function isLeaf(menu: MenuDTO): boolean {
         >
           <template #title>
             <el-icon>
-              <component :is="getIcon(menu.code) || Setting" />
+              <component :is="resolveIcon(menu.icon) || Setting" />
             </el-icon>
             <span>{{ menu.name }}</span>
           </template>
@@ -150,9 +102,9 @@ function isLeaf(menu: MenuDTO): boolean {
               <el-menu-item
                 v-for="grandChild in child.children"
                 :key="grandChild.id"
-                :index="(getRoutePath(grandChild.code) || '')"
-                @click="getRoutePath(grandChild.code) && navigateTo(getRoutePath(grandChild.code)!)"
-                :disabled="!isLeaf(grandChild)"
+                :index="(grandChild.path || '')"
+                @click="grandChild.path && navigateTo(grandChild.path)"
+                :disabled="!grandChild.path"
               >
                 <span>{{ grandChild.name }}</span>
               </el-menu-item>
@@ -161,12 +113,12 @@ function isLeaf(menu: MenuDTO): boolean {
             <!-- 叶子节点（可直接跳转） -->
             <el-menu-item
               v-else
-              :index="(getRoutePath(child.code) || '')"
-              @click="getRoutePath(child.code) && navigateTo(getRoutePath(child.code)!)"
-              :disabled="!isLeaf(child)"
+              :index="(child.path || '')"
+              @click="child.path && navigateTo(child.path)"
+              :disabled="!child.path"
             >
-              <el-icon v-if="getIcon(child.code)">
-                <component :is="getIcon(child.code)" />
+              <el-icon v-if="resolveIcon(child.icon)">
+                <component :is="resolveIcon(child.icon)" />
               </el-icon>
               <span>{{ child.name }}</span>
             </el-menu-item>
@@ -175,12 +127,12 @@ function isLeaf(menu: MenuDTO): boolean {
 
         <!-- 无子菜单的顶级菜单（叶子节点） -->
         <el-menu-item
-          v-else-if="isLeaf(menu)"
-          :index="(getRoutePath(menu.code) || '')"
-          @click="navigateTo(getRoutePath(menu.code)!)"
+          v-else-if="menu.path"
+          :index="menu.path"
+          @click="navigateTo(menu.path)"
         >
           <el-icon>
-            <component :is="getIcon(menu.code) || Setting" />
+            <component :is="resolveIcon(menu.icon) || Setting" />
           </el-icon>
           <template #title>{{ menu.name }}</template>
         </el-menu-item>

@@ -47,25 +47,25 @@ export const asyncRoutes: RouteRecordRaw[] = [
     name: 'System',
     component: () => import('@/layouts/MainLayout.vue'),
     redirect: '/system/user',
-    meta: { title: '系统管理', icon: 'Setting', permission: 'system:view' },
+    meta: { title: '系统管理', icon: 'Setting' },
     children: [
       {
         path: 'user',
         name: 'UserManagement',
         component: () => import('@/views/system/user/index.vue'),
-        meta: { title: '用户管理', icon: 'User', permission: 'user:view' },
+        meta: { title: '用户管理', icon: 'User', permission: 'user:manage' },
       },
       {
         path: 'department',
         name: 'DepartmentManagement',
         component: () => import('@/views/system/department/index.vue'),
-        meta: { title: '部门管理', icon: 'OfficeBuilding', permission: 'department:view' },
+        meta: { title: '部门管理', icon: 'OfficeBuilding', permission: 'dept:manage' },
       },
       {
         path: 'role',
         name: 'RoleManagement',
         component: () => import('@/views/system/role/index.vue'),
-        meta: { title: '角色管理', icon: 'Key', permission: 'role:view' },
+        meta: { title: '角色管理', icon: 'Key', permission: 'role:manage' },
       },
     ],
   },
@@ -74,19 +74,19 @@ export const asyncRoutes: RouteRecordRaw[] = [
     name: 'Quality',
     component: () => import('@/layouts/MainLayout.vue'),
     redirect: '/quality/node',
-    meta: { title: '质量管理', icon: 'DataAnalysis', permission: 'quality:view' },
+    meta: { title: '质量管理', icon: 'DataAnalysis' },
     children: [
       {
         path: 'node',
         name: 'NodeManagement',
         component: () => import('@/views/quality/node/index.vue'),
-        meta: { title: '节点管理', icon: 'Connection', permission: 'node:view' },
+        meta: { title: '节点管理', icon: 'Connection', permission: 'node:manage' },
       },
       {
         path: 'inspection-item',
         name: 'InspectionItemManagement',
         component: () => import('@/views/quality/inspection-item/index.vue'),
-        meta: { title: '检测项管理', icon: 'DocumentChecked', permission: 'inspection:view' },
+        meta: { title: '检测项管理', icon: 'DocumentChecked', permission: 'item:manage' },
       },
       {
         path: 'inspection-record',
@@ -107,13 +107,13 @@ export const asyncRoutes: RouteRecordRaw[] = [
     name: 'Report',
     component: () => import('@/layouts/MainLayout.vue'),
     redirect: '/report/quality',
-    meta: { title: '报表中心', icon: 'DataLine', permission: 'report:view' },
+    meta: { title: '报表中心', icon: 'DataLine' },
     children: [
       {
         path: 'quality',
         name: 'QualityReport',
         component: () => import('@/views/report/quality/index.vue'),
-        meta: { title: '质量报表', icon: 'TrendCharts', permission: 'report:quality' },
+        meta: { title: '质量报表', icon: 'TrendCharts', permission: 'report:view' },
       },
     ],
   },
@@ -122,19 +122,19 @@ export const asyncRoutes: RouteRecordRaw[] = [
     name: 'Implementation',
     component: () => import('@/layouts/MainLayout.vue'),
     redirect: '/implementation/plan',
-    meta: { title: '实施方案', icon: 'Memo', permission: 'implementation:view' },
+    meta: { title: '实施方案', icon: 'Memo' },
     children: [
       {
         path: 'plan',
         name: 'ImplementationPlan',
         component: () => import('@/views/implementation/plan/index.vue'),
-        meta: { title: '实施方案', icon: 'Tickets', permission: 'implementation:plan' },
+        meta: { title: '实施方案', icon: 'Tickets', permission: 'plan:manage' },
       },
       {
         path: 'feedback',
         name: 'ImplementationFeedback',
         component: () => import('@/views/implementation/feedback/index.vue'),
-        meta: { title: '反馈记录', icon: 'ChatDotRound', permission: 'implementation:feedback' },
+        meta: { title: '反馈记录', icon: 'ChatDotRound' },
       },
     ],
   },
@@ -153,7 +153,7 @@ export const errorRoutes: RouteRecordRaw[] = [
 // ============ 创建路由实例 ============
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [...constantRoutes],
+  routes: [...constantRoutes, ...asyncRoutes, ...errorRoutes],
   scrollBehavior: () => ({ left: 0, top: 0 }),
 })
 
@@ -203,24 +203,17 @@ router.beforeEach(async (to, _from) => {
     }
   }
 
+  // 路由已在 createRouter 时全部注册，无需动态 addRoute
+  // 权限过滤仅影响侧边栏菜单显示（通过 permissionStore.menuList）
   const permissionStore = usePermissionStore()
   if (!permissionStore.isMenuLoaded) {
-    const filteredRoutes = permissionStore.filterRoutesByPermission([...asyncRoutes] as any, userStore.permissions)
-    permissionStore.setRoutes([...constantRoutes, ...asyncRoutes] as any)
+    const filteredRoutes = permissionStore.filterRoutesByPermission(
+      [...asyncRoutes] as any,
+      userStore.permissions,
+    )
+    permissionStore.setRoutes([...constantRoutes, ...filteredRoutes] as any)
     permissionStore.setAddRoutes(filteredRoutes)
     permissionStore.isMenuLoaded = true
-
-    filteredRoutes.forEach((r: any) => {
-      router.addRoute(r)
-    })
-    router.addRoute(errorRoutes[0]!)
-
-    // 仅当目标路由尚未匹配时才需要重新导航
-    // （如用户首次访问动态路由页 /system/user）
-    // 对于已在 constantRoutes 中的路由（如 /dashboard），无需重新导航
-    if (!to.matched.length) {
-      return { ...to, replace: true }
-    }
   }
 
   return true
