@@ -1,12 +1,13 @@
-import request from './request'
-import type { ApiResponse, QualityReport, ReportQuery, PageResult } from '@/types/api'
+// ============ 报表模块 ============
+import request from '@/utils/request'
+import type {ApiResponse, PageResult, QualityReport, ReportQuery} from '@/types/api'
 
 export const reportApi = {
-  quality: (params: ReportQuery) =>
-    request.get<ApiResponse<PageResult<QualityReport>>>('/report/quality', { params }),
-  export: (params: ReportQuery): Promise<Blob> =>
-    request.get(`${import.meta.env.VITE_API_BASE_URL || '/api'}/report/quality/export`, {
-      params,
-      responseType: 'blob',
-    }) as unknown as Promise<Blob>,
+  /** 质量报表（分页） */
+  quality: (params: ReportQuery) => request.get<ApiResponse<PageResult<QualityReport>>>('/report/quality', {params}),
+  /** 导出质量报表（Blob） */
+  export: (params: ReportQuery): Promise<Blob> => request.get('/api/report/quality/export', {
+    params,
+    responseType: 'blob',
+  }) as unknown as Promise<Blob>,
 }

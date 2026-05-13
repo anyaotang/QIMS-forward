@@ -1,12 +1,1 @@
-import request from './request'
-import type { ApiResponse, DepartmentTreeNode } from '@/types/api'
-
-export const departmentApi = {
-  tree: () => request.get<ApiResponse<DepartmentTreeNode[]>>('/department/tree'),
-  list: () => request.get<ApiResponse<DepartmentTreeNode[]>>('/department/list'),
-  create: (data: Partial<DepartmentTreeNode>) => request.post('/department', data),
-  update: (data: Partial<DepartmentTreeNode>) => request.put('/department', data),
-  delete: (id: number) => request.delete(`/department/${id}`),
-  inheritRole: (id: number, roleIds: number[]) =>
-    request.post(`/department/${id}/inherit-role`, { roleIds }),
-}
+// ============ 部门模块 ============\nimport request from '@/utils/request'\nimport type { ApiResponse, DepartmentTreeNode } from '@/types/api'\n\nexport const departmentApi = {\n  /** 获取部门树（嵌套结构） */\n  tree: () => request.get<ApiResponse<DepartmentTreeNode[]>>('/department/tree'),\n\n  /** 获取部门列表（平铺） */\n  list: () => request.get<ApiResponse<DepartmentTreeNode[]>>('/department/list'),\n\n  /** 创建部门 */\n  create: (data: Partial<DepartmentTreeNode>) => request.post('/department', data),\n\n  /** 更新部门 */\n  update: (data: Partial<DepartmentTreeNode>) => request.put('/department', data),\n\n  /** 删除部门 */\n  delete: (id: number) => request.delete('/department/' + id),\n\n  /** 部门继承角色 */\n  inheritRole: (id: number, roleIds: number[]) =>\n    request.post('/department/' + id + '/inherit-role', { roleIds }),\n}\n

@@ -225,7 +225,20 @@ export interface Statistics {
   departmentCount: number
 }
 
-// ============ 字典 ============
+// ============ 菜单 ============
+export interface MenuDTO {
+  id: number
+  name: string
+  code: string
+  type: number // 1=菜单 2=按钮
+  parentId?: number | null
+  sort?: number
+  path?: string
+  icon?: string
+  children?: MenuDTO[]
+}
+
+// ============ 字令典 ============
 export interface DictData {
   label: string
   value: number | string

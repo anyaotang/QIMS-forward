@@ -1,14 +1,1 @@
-import request from './request'
-import type { ApiResponse, NodeTreeNode, NodeForm, PageResult, PageQuery } from '@/types/api'
-
-export const nodeApi = {
-  tree: (params?: { type?: number; keyword?: string }) =>
-    request.get<ApiResponse<NodeTreeNode[]>>('/node/tree', { params }),
-  list: (params?: PageQuery & { type?: number; parentId?: number }) =>
-    request.get<ApiResponse<PageResult<NodeTreeNode>>>('/node/list', { params }),
-  create: (data: NodeForm) => request.post('/node', data),
-  update: (data: NodeForm) => request.put('/node', data),
-  delete: (id: number) => request.delete(`/node/${id}`),
-  move: (id: number, parentId: number | null, orderNum: number) =>
-    request.post(`/node/${id}/move`, { parentId, orderNum }),
-}
+// ============ 节点模块 ============\nimport request from '@/utils/request'\nimport type { ApiResponse, NodeTreeNode, PageResult, PageQuery, NodeForm } from '@/types/api'\n\nexport const nodeApi = {\n  /** 获取节点树（嵌套结构） */\n  tree: (params?: { type?: number; keyword?: string }) =>\n    request.get<ApiResponse<NodeTreeNode[]>>('/node/tree', { params }),\n\n  /** 分页查询节点列表 */\n  list: (params?: PageQuery & { type?: number; parentId?: number }) =>\n    request.get<ApiResponse<PageResult<NodeTreeNode>>>('/node/list', { params }),\n\n  /** 创建节点 */\n  create: (data: NodeForm) => request.post('/node', data),\n\n  /** 更新节点 */\n  update: (data: NodeForm) => request.put('/node', data),\n\n  /** 删除节点 */\n  delete: (id: number) => request.delete('/node/' + id),\n\n  /** 移动节点（调整父子关系和排序） */\n  move: (id: number, parentId: number | null, orderNum: number) =>\n    request.post('/node/' + id + '/move', { parentId, orderNum }),\n}\n

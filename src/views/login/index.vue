@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { useUserStore } from '@/stores/user'
-import { useI18n } from 'vue-i18n'
+import {useRouter} from 'vue-router'
+import {ElMessage} from 'element-plus'
+import {useUserStore} from '@/stores/user'
+import {useI18n} from 'vue-i18n'
 
 const router = useRouter()
 const userStore = useUserStore()
-const { t } = useI18n()
+const {t} = useI18n()
 
 const formRef = ref()
 const loading = ref(false)
@@ -18,8 +17,8 @@ const form = reactive({
 })
 
 const rules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  username: [{required: true, message: '请输入用户名', trigger: 'blur'}],
+  password: [{required: true, message: '请输入密码', trigger: 'blur'}],
 }
 
 async function handleLogin() {
@@ -44,7 +43,7 @@ async function handleLogin() {
     <div class="login-card">
       <!-- Logo -->
       <div class="login-logo">
-        <img src="/favicon.ico" alt="QIMS" />
+        <img src="/favicon.ico" alt="QIMS"/>
         <h1 class="title">QIMS 质量检测管理系统</h1>
         <p class="subtitle">Quality Inspection & Management System</p>
       </div>

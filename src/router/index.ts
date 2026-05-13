@@ -9,7 +9,7 @@ import 'nprogress/nprogress.css'
 
 NProgress.configure({ showSpinner: false })
 
-// ============ 静态路由（无需权限）============
+// ============ 静态路由（无需权限，始终注册）============
 export const constantRoutes: RouteRecordRaw[] = [
   {
     path: '/login',
@@ -17,10 +17,6 @@ export const constantRoutes: RouteRecordRaw[] = [
     component: () => import('@/views/login/index.vue'),
     meta: { title: '登录', hidden: true },
   },
-]
-
-// ============ 动态路由（需权限）============
-export const asyncRoutes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Layout',
@@ -34,8 +30,18 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/dashboard/index.vue'),
         meta: { title: '仪表盘', icon: 'Odometer', affix: true },
       },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/views/profile/index.vue'),
+        meta: { title: '个人中心', icon: 'User', hidden: true },
+      },
     ],
   },
+]
+
+// ============ 动态路由（需权限过滤）============
+export const asyncRoutes: RouteRecordRaw[] = [
   {
     path: '/system',
     name: 'System',
@@ -132,21 +138,6 @@ export const asyncRoutes: RouteRecordRaw[] = [
       },
     ],
   },
-  {
-    path: '/profile',
-    name: 'Profile',
-    component: () => import('@/layouts/MainLayout.vue'),
-    redirect: '/profile/index',
-    meta: { title: '个人中心', hidden: true },
-    children: [
-      {
-        path: 'index',
-        name: 'ProfileIndex',
-        component: () => import('@/views/profile/index.vue'),
-        meta: { title: '个人中心', icon: 'User' },
-      },
-    ],
-  },
 ]
 
 // ============ 404 ============
@@ -167,7 +158,7 @@ const router = createRouter({
 })
 
 // ============ 全局前置守卫 ============
-router.beforeEach(async (to, _from, next) => {
+router.beforeEach(async (to, _from) => {
   NProgress.start()
   document.title = `${(to.meta?.title as string) || ''} - QIMS 质量检测管理系统`.trim()
 
@@ -185,31 +176,37 @@ router.beforeEach(async (to, _from, next) => {
 
   if (to.path === '/login') {
     if (userStore.isLoggedIn) {
-      next('/dashboard')
-    } else {
-      next()
+      return '/dashboard'
     }
-    return
+    return true
   }
 
   if (!userStore.isLoggedIn) {
-    next(`/login?redirect=${to.fullPath}`)
-    return
+    return `/login?redirect=${to.fullPath}`
   }
 
   if (!userStore.userInfo) {
     try {
       await userStore.fetchUserInfo()
     } catch {
-      next('/login')
-      return
+      // fetchUserInfo 内部已捕获异常并返回 null
+      // 如果失败，用户仍有 token 和权限，允许继续导航
+    }
+  }
+
+  // 加载菜单树（页面刷新时需要重新获取）
+  if (userStore.menus.length === 0) {
+    try {
+      await userStore.fetchMenus()
+    } catch {
+      // ignore - 菜单获取失败不阻断导航
     }
   }
 
   const permissionStore = usePermissionStore()
   if (!permissionStore.isMenuLoaded) {
     const filteredRoutes = permissionStore.filterRoutesByPermission([...asyncRoutes] as any, userStore.permissions)
-    permissionStore.setRoutes([...asyncRoutes] as any)
+    permissionStore.setRoutes([...constantRoutes, ...asyncRoutes] as any)
     permissionStore.setAddRoutes(filteredRoutes)
     permissionStore.isMenuLoaded = true
 
@@ -218,11 +215,15 @@ router.beforeEach(async (to, _from, next) => {
     })
     router.addRoute(errorRoutes[0]!)
 
-    next({ ...to, replace: true })
-    return
+    // 仅当目标路由尚未匹配时才需要重新导航
+    // （如用户首次访问动态路由页 /system/user）
+    // 对于已在 constantRoutes 中的路由（如 /dashboard），无需重新导航
+    if (!to.matched.length) {
+      return { ...to, replace: true }
+    }
   }
 
-  next()
+  return true
 })
 
 router.afterEach(() => {

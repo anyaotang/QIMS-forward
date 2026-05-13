@@ -1,25 +1,23 @@
-/**
- * 用户 & 认证状态管理
- */
+/** * 用户 & 认证状态管理 */
 import {defineStore} from 'pinia'
-import {authApi, userApi, extractData} from '@/utils/request'
+import {authApi} from '@/api/auth'
+import {userApi} from '@/api/user'
 import {saveLoginData, clearLoginData, getToken} from '@/utils/auth'
-import type {LoginForm, LoginVO, UserInfo} from '@/types/api'
+import type {LoginForm, LoginVO, UserInfo, MenuDTO} from '@/types/api'
+import {extractData} from "@/utils/request";
 
 export const useUserStore = defineStore('user', () => {
   const token: Ref<string> = ref<string>(getToken() || '')
   const userInfo: Ref<UserInfo | null> = ref<UserInfo | null>(null)
   const permissions: Ref<string[]> = ref<string[]>([])
   const roles: Ref<string[]> = ref<string[]>([])
+  const menus: Ref<MenuDTO[]> = ref<MenuDTO[]>([])
   const isLoading: Ref<boolean> = ref(false)
-
   const isLoggedIn: ComputedRef<boolean> = computed(() => !!token.value)
   const username: ComputedRef<string> = computed(() => userInfo.value?.username || '')
   const nickname: ComputedRef<string> = computed(() => userInfo.value?.nickname || username.value)
   const avatar: ComputedRef<string> = computed(() => userInfo.value?.avatar || '')
-  const hasAdminRole: ComputedRef<boolean> = computed(
-    () => roles.value.includes('admin') || roles.value.includes('ADMIN')
-  )
+  const hasAdminRole: ComputedRef<boolean> = computed(() => roles.value.includes('admin') || roles.value.includes('ADMIN'))
 
   async function login(form: LoginForm) {
     isLoading.value = true
@@ -30,7 +28,10 @@ export const useUserStore = defineStore('user', () => {
       token.value = data.token
       roles.value = data.roles || []
       permissions.value = data.permissions || []
+// 尝试获取用户信息，但不让失败阻断登录
       await fetchUserInfo()
+// 获取菜单树（不阻断登录）
+      await fetchMenus()
       return data
     } finally {
       isLoading.value = false
@@ -62,7 +63,9 @@ export const useUserStore = defineStore('user', () => {
       permissions.value = data.permissions || []
       return data
     } catch {
-      await logout()
+      // 不在此处调用 logout()——让调用方（登录流程或路由守卫）决定如何处理
+// 避免登录成功后因 fetchUserInfo 失败而意外清除 token
+      userInfo.value = null
       return null
     }
   }
@@ -78,6 +81,7 @@ export const useUserStore = defineStore('user', () => {
       userInfo.value = null
       permissions.value = []
       roles.value = []
+      menus.value = []
     }
   }
 
@@ -91,9 +95,23 @@ export const useUserStore = defineStore('user', () => {
     return roles.value.includes(role)
   }
 
+  async function fetchMenus() {
+    if (!token.value) return []
+    try {
+      const res = await authApi.menus()
+      const data = extractData(res) as MenuDTO[]
+      menus.value = data || []
+      return data
+    } catch (e) {
+      console.error('[UserStore] fetchMenus failed:', e)
+      menus.value = []
+      return []
+    }
+  }
+
   return {
-    token, userInfo, permissions, roles, isLoading,
+    token, userInfo, permissions, roles, menus, isLoading,
     isLoggedIn, username, nickname, avatar, hasAdminRole,
-    login, urlLogin, fetchUserInfo, logout, hasPermission, hasRole,
+    login, urlLogin, fetchUserInfo, logout, hasPermission, hasRole, fetchMenus,
   }
 })

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useUserStore } from '@/stores/user'
+import {useUserStore} from '@/stores/user'
 
 const userStore = useUserStore()
 const user = computed(() => userStore.userInfo)
@@ -28,11 +27,17 @@ const user = computed(() => userStore.userInfo)
         <el-descriptions-item label="手机号">{{ user?.phone || '-' }}</el-descriptions-item>
         <el-descriptions-item label="部门">{{ user?.departmentName || '-' }}</el-descriptions-item>
         <el-descriptions-item label="角色">
-          <el-tag v-for="r in user?.roles" :key="r" size="small" style="margin-right:4px">{{ r }}</el-tag>
+          <el-tag v-for="r in user?.roles" :key="r" size="small" style="margin-right:4px">{{
+              r
+            }}
+          </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="权限" :span="2">
-          <el-tag v-for="p in user?.permissions?.slice(0, 20)" :key="p" size="small" type="info" style="margin-right:4px;margin-bottom:2px">{{ p }}</el-tag>
-          <span v-if="(user?.permissions?.length || 0) > 20" style="color:#909399">...共 {{ user?.permissions?.length }} 项</span>
+          <el-tag v-for="p in user?.permissions?.slice(0, 20)" :key="p" size="small" type="info"
+                  style="margin-right:4px;margin-bottom:2px">{{ p }}
+          </el-tag>
+          <span v-if="(user?.permissions?.length || 0) > 20"
+                style="color:#909399">...共 {{ user?.permissions?.length }} 项</span>
         </el-descriptions-item>
       </el-descriptions>
     </div>
