@@ -1,6 +1,6 @@
 // ============ 报表模块 ============
 import request from '@/utils/request'
-import type {ApiResponse, PageResult, QualityReport, ReportQuery} from '@/types/api'
+import type {ApiResponse, PageResult, QualityReport, ReportQuery, Statistics} from '@/types/api'
 
 export const reportApi = {
   /** 质量报表（分页） */
@@ -10,4 +10,6 @@ export const reportApi = {
     params,
     responseType: 'blob',
   }) as unknown as Promise<Blob>,
+  /** 获取统计数据 */
+  statistics: () => request.get<ApiResponse<Statistics>>('/statistics'),
 }

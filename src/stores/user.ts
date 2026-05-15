@@ -3,8 +3,9 @@ import {defineStore} from 'pinia'
 import {authApi} from '@/api/auth'
 import {userApi} from '@/api/user'
 import {saveLoginData, clearLoginData, getToken} from '@/utils/auth'
+import {setLoginFlow} from '@/utils/request'
+import {extractData} from '@/utils/request'
 import type {LoginForm, LoginVO, UserInfo, MenuDTO} from '@/types/api'
-import {extractData} from "@/utils/request";
 
 export const useUserStore = defineStore('user', () => {
   const token: Ref<string> = ref<string>(getToken() || '')
@@ -20,6 +21,7 @@ export const useUserStore = defineStore('user', () => {
   const hasAdminRole: ComputedRef<boolean> = computed(() => roles.value.includes('admin') || roles.value.includes('ADMIN'))
 
   async function login(form: LoginForm) {
+    setLoginFlow(true)
     isLoading.value = true
     try {
       const res = await authApi.login(form)
@@ -28,17 +30,17 @@ export const useUserStore = defineStore('user', () => {
       token.value = data.token
       roles.value = data.roles || []
       permissions.value = data.permissions || []
-// 尝试获取用户信息，但不让失败阻断登录
-      await fetchUserInfo()
-// 获取菜单树（不阻断登录）
-      await fetchMenus()
+      // 不在 login() 中调用 fetchUserInfo/fetchMenus——
+      // 由路由守卫负责获取，避免 API 挂起/401 阻塞跳转
       return data
     } finally {
       isLoading.value = false
+      setLoginFlow(false)
     }
   }
 
   async function urlLogin(tokenStr: string) {
+    setLoginFlow(true)
     isLoading.value = true
     try {
       const res = await authApi.urlLogin(tokenStr)
@@ -50,6 +52,7 @@ export const useUserStore = defineStore('user', () => {
       return data
     } finally {
       isLoading.value = false
+      setLoginFlow(false)
     }
   }
 

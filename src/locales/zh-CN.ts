@@ -235,6 +235,55 @@ export default {
     changePassword: '修改密码',
   },
 
+  // ============ 角色 ============
+  role: {
+    title: '角色管理',
+    name: '角色名称',
+    code: '角色标识',
+    status: '状态',
+    dataScope: '数据范围',
+    remark: '备注',
+    description: '描述',
+    createTime: '创建时间',
+    addRole: '新增角色',
+    editRole: '编辑角色',
+    deleteRole: '删除角色',
+    deleteConfirm: '确定删除角色「{name}」？删除后关联的权限分配将一并移除。',
+    assignPermission: '权限配置',
+    assignPermissionTitle: '权限配置 - {name}',
+    assignSuccess: '权限分配成功',
+    keywordPlaceholder: '角色名称/编码',
+    codePlaceholder: '如：admin、inspector',
+    namePlaceholder: '如：超级管理员、质检员',
+    codeRuleHint: '编码以字母开头，仅允许字母、数字、下划线和连字符',
+    dataScopeAll: '全部数据',
+    dataScopeDept: '本部门',
+    dataScopeDeptAndSub: '本部门及子部门',
+    dataScopeSelf: '仅本人',
+    enabled: '启用',
+    disabled: '禁用',
+    toggleConfirm: '确定{action}角色「{name}」？',
+    enable: '启用',
+    disable: '禁用',
+  },
+
+  // ============ 语言 ============
+  locale: {
+    zh: '中文',
+    en: 'EN',
+    switchToLight: '切换亮色',
+    switchToDark: '切换暗色',
+  },
+
+  // ============ 布局 ============
+  layout: {
+    home: '首页',
+    profile: '个人中心',
+    logout: '退出登录',
+    logoutConfirm: '确定要退出登录吗？',
+    logoutHint: '提示',
+  },
+
   // ============ 错误 ============
   error: {
     404: '页面不存在',

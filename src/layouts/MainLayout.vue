@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import {ref, computed} from 'vue'
-import {useRoute, RouterView} from 'vue-router'
+import { useRoute, RouterView } from 'vue-router'
 import Sidebar from './Sidebar.vue'
 import HeaderBar from './Header.vue'
 import TagsView from './TagsView.vue'
-import {usePermissionStore} from '@/stores/permission'
+import { usePermissionStore } from '@/stores/permission'
 
 const permissionStore = usePermissionStore()
 const route = useRoute()
@@ -24,21 +23,21 @@ function toggleSidebar() {
 <template>
   <div class="app-wrapper">
     <!-- 侧边栏 -->
-    <Sidebar :collapsed="isCollapsed"/>
+    <Sidebar :collapsed="isCollapsed" />
 
     <!-- 主内容区 -->
     <div class="main-container" :class="{ collapsed: isCollapsed }">
       <!-- 顶栏 -->
-      <HeaderBar @toggle-sidebar="toggleSidebar"/>
+      <HeaderBar @toggle-sidebar="toggleSidebar" />
 
       <!-- 标签导航 -->
-      <TagsView/>
+      <TagsView />
 
       <!-- 页面内容 -->
       <main class="app-main" :style="mainStyle">
         <RouterView v-slot="{ Component, route: r }">
           <transition name="fade" mode="out-in">
-            <component :is="Component" :key="r.path"/>
+            <component :is="Component" :key="r.path" />
           </transition>
         </RouterView>
       </main>

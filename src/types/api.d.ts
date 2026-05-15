@@ -170,6 +170,63 @@ export interface ManualRecordForm {
   remark?: string
 }
 
+// ============ 检测任务 ============
+export interface InspectionTask {
+  id: number
+  name: string
+  code: string
+  nodeId: number
+  nodeName?: string
+  status: number // 0=待检测 1=检测中 2=已完成 3=已取消
+  totalItems: number
+  completedItems: number
+  qualifiedCount: number
+  unqualifiedCount: number
+  planStartTime?: string
+  planEndTime?: string
+  actualStartTime?: string
+  actualEndTime?: string
+  inspector?: string
+  remark?: string
+  createTime?: string
+  updateTime?: string
+}
+
+export interface InspectionTaskForm {
+  id?: number
+  name: string
+  code: string
+  nodeId: number
+  planStartTime?: string
+  planEndTime?: string
+  inspector?: string
+  remark?: string
+  itemIds?: number[]
+}
+
+export interface InspectionTaskDetail extends InspectionTask {
+  items: InspectionTaskItem[]
+}
+
+export interface InspectionTaskItem {
+  id: number
+  taskId: number
+  itemId: number
+  itemName: string
+  itemCode: string
+  targetValue?: number
+  unit?: string
+  upperLimit?: number
+  lowerLimit?: number
+  actualValue?: number
+  deviation?: number
+  isQualified?: boolean
+  status: number // 0=待检测 1=已检测 2=跳过
+  recordTime?: string
+  inspector?: string
+  remark?: string
+}
+
 // ============ 报表 ============
 export interface QualityReport {
   id: number
@@ -198,16 +255,18 @@ export interface ReportQuery extends PageQuery {
 
 // ============ 实施方案 ============
 export interface ImplementationPlan {
-  id: number
-  title: string
+  id?: number
+  name?: string          // 对应数据库字段 name
   description?: string
-  targetDate?: string
-  assignee?: string
-  status?: number // 0=待处理, 1=进行中, 2=已完成
+  deadline?: string      // 对应数据库字段 deadline（日期）
+  responsible?: string  // 对应数据库字段 responsible（负责人）
+  parentId?: number     // 对应数据库字段 parent_id（父方案ID）
+  status?: number       // 0=未开始, 1=进行中, 2=已完成
   feedback?: string
   feedbackTime?: string
   nodeId?: number
   nodeName?: string
+  children?: ImplementationPlan[] // 树形结构（非数据库字段）
   createTime?: string
 }
 
@@ -240,9 +299,59 @@ export interface MenuDTO {
   children?: MenuDTO[]
 }
 
+// ============ 权限/菜单表单 ============
+export interface MenuForm {
+  id?: number
+  name: string
+  code: string
+  type: number // 1=菜单 2=按钮
+  parentId?: number | null
+  sort?: number
+  path?: string
+  icon?: string
+  permission?: string
+  status?: number // 0=禁用 1=启用
+}
+
 // ============ 字令典 ============
 export interface DictData {
   label: string
   value: number | string
   type: string
+}
+
+// ============ 角色 ============
+export interface RoleInfo {
+  id: number
+  name: string
+  code: string
+  status: number // 1=启用 0=禁用
+  dataScope?: number // 数据范围：1全部 2本部门 3本部门及子部门 4仅本人
+  remark?: string
+  createTime?: string
+  updateTime?: string
+}
+
+export interface RoleForm {
+  id?: number
+  name: string
+  code: string
+  status: number
+  dataScope?: number
+  remark?: string
+}
+
+// ============ 操作日志 ============
+export interface LogInfo {
+  id: number
+  username: string
+  module: string
+  description: string
+  method: string
+  url: string
+  ip: string
+  params: string
+  result: string
+  duration: number
+  createTime: string
 }

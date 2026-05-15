@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import type { MenuDTO } from '@/types/api'
+import { useI18n } from 'vue-i18n'
 import {
   Odometer,
   Setting,
@@ -19,6 +20,13 @@ import {
   TrendCharts,
   Tickets,
   ChatDotRound,
+  Grid,
+  Folder,
+  FolderOpened,
+  Document,
+  FolderAdd,
+  Operation,
+  Guide,
 } from '@element-plus/icons-vue'
 
 const props = defineProps<{ collapsed: boolean }>()
@@ -26,16 +34,68 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
+const { t } = useI18n()
+
 // 图标名 → Element Plus 图标组件映射
 const iconComponents: Record<string, any> = {
-  Setting, DataAnalysis, DataLine, Memo, User,
+  // 大驼峰命名
+  Odometer, Setting, DataAnalysis, DataLine, Memo, User,
   OfficeBuilding, Key, Connection, DocumentChecked,
-  List, Edit, TrendCharts, Tickets, ChatDotRound,
+  List, Edit, TrendCharts, Tickets, ChatDotRound, Grid,
+  Folder, FolderOpened, Document, FolderAdd, Operation, Guide,
+  // 小写别名（兼容后端返回的小写图标名）
+  odometer: Odometer, setting: Setting, dataanalysis: DataAnalysis,
+  dataline: DataLine, memo: Memo, user: User, officebuilding: OfficeBuilding,
+  key: Key, connection: Connection, documentchecked: DocumentChecked,
+  list: List, edit: Edit, trendcharts: TrendCharts, tickets: Tickets,
+  chatdotround: ChatDotRound, grid: Grid, folder: Folder,
+  folderopened: FolderOpened, document: Document, folderadd: FolderAdd,
+  operation: Operation, guide: Guide,
+  // kebab-case 别名
+  'trend-charts': TrendCharts,
+  // 常见图标名映射
+  'el-icon-setting': Setting, 'el-icon-dataanalysis': DataAnalysis,
+  'el-icon-dataline': DataLine, 'el-icon-user': User,
+  'el-icon-list': List, 'el-icon-edit': Edit,
 }
 
+// 默认图标（当未找到匹配时使用）
+const DEFAULT_ICON = Document
+
+// 解析图标名称，兼容多种格式
 function resolveIcon(iconName?: string) {
-  if (!iconName) return null
-  return iconComponents[iconName] || null
+  if (!iconName) return DEFAULT_ICON
+
+  // 1. 直接查找（支持大驼峰、小写、kebab-case）
+  if (iconComponents[iconName]) {
+    return iconComponents[iconName]
+  }
+
+  // 2. 尝试转换大小写
+  const lowerName = iconName.toLowerCase()
+  if (iconComponents[lowerName]) {
+    return iconComponents[lowerName]
+  }
+
+  // 3. 尝试转换驼峰命名
+  const camelName = iconName
+    .replace(/[-_](\w)/g, (_, c) => c ? c.toUpperCase() : '')
+    .replace(/^./, str => str.toUpperCase())
+  if (iconComponents[camelName]) {
+    return iconComponents[camelName]
+  }
+
+  // 4. 移除前缀后查找（如 el-icon-、icon- 等）
+  const cleanName = iconName
+    .replace(/^(el-icon-|icon-|-)/i, '')
+    .replace(/[-_](\w)/g, (_, c) => c ? c.toUpperCase() : '')
+  if (iconComponents[cleanName]) {
+    return iconComponents[cleanName]
+  }
+
+  // 5. 返回默认图标
+  console.warn(`[Sidebar] 未找到图标: ${iconName}，使用默认图标`)
+  return DEFAULT_ICON
 }
 
 function navigateTo(path: string) {
@@ -72,7 +132,7 @@ function isLeaf(menu: MenuDTO): boolean {
       <!-- 仪表盘（固定显示） -->
       <el-menu-item index="/dashboard" @click="navigateTo('/dashboard')">
         <el-icon><Odometer /></el-icon>
-        <template #title>仪表盘</template>
+        <template #title>{{ t('menu.dashboard') }}</template>
       </el-menu-item>
 
       <!-- 动态渲染后端返回的菜单树 -->
@@ -152,6 +212,8 @@ function isLeaf(menu: MenuDTO): boolean {
   z-index: 100;
   transition: width 0.3s;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
   &.collapsed {
     width: 64px;
@@ -163,6 +225,30 @@ function isLeaf(menu: MenuDTO): boolean {
     .el-menu--collapse {
       width: 64px;
     }
+  }
+}
+
+.sidebar-menu {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* 自定义滚动条样式 */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
   }
 }
 

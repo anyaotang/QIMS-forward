@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
-import type { Statistics, InspectionRecord } from '@/types/api'
-import { statisticsApi } from '@/api/statistics'
 import { extractData } from '@/utils/request'
-import { recordApi } from '@/api/record'
+import type { Statistics, NodeTreeNode } from '@/types/api'
+import { statisticsApi } from '@/api/statistics'
+import { nodeApi } from '@/api/node'
 import QualityTrendChart from '@/components/charts/QualityTrendChart.vue'
 import NodePieChart from '@/components/charts/NodePieChart.vue'
 import RecordBarChart from '@/components/charts/RecordBarChart.vue'
@@ -19,8 +18,7 @@ const stats = ref<Statistics>({
   departmentCount: 0,
 })
 
-const recentRecords = ref<InspectionRecord[]>([])
-const recordLoading = ref(false)
+const nodeTree = ref<NodeTreeNode[]>([])
 
 // 图表数据
 const trendDates = ref<string[]>([])
@@ -30,60 +28,61 @@ const recordUnqualified = ref<number[]>([])
 const nodePieData = ref<Array<{ name: string; value: number }>>([])
 
 onMounted(async () => {
+  loadNodeTree()
+  await loadStatistics()
+})
+
+async function loadNodeTree() {
+  try {
+    const res = await nodeApi.tree()
+    nodeTree.value = extractData(res) || []
+    // 节点分布饼图
+    nodePieData.value = flattenNodes(nodeTree.value).slice(0, 8).map(n => ({
+      name: n.name || '未知',
+      value: Math.floor(Math.random() * 30) + 5, // TODO: 后端提供真实数据
+    }))
+  } catch {}
+}
+
+async function loadStatistics() {
   loading.value = true
   try {
     const res = await statisticsApi.dashboard()
     stats.value = extractData(res) || getDefaultStats()
-  } catch (e) {
-    console.warn('[Dashboard] 加载统计数据失败，使用默认数据:', e)
+
+    // 合格率趋势（模拟近7日）
+    const now = new Date()
+    const dates = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(now)
+      d.setDate(d.getDate() - (6 - i))
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${m}-${day}`
+    })
+    trendDates.value = dates
+    const baseRate = stats.value.qualifiedRate || 93
+    trendData.value = [
+      baseRate - 3,
+      baseRate - 1,
+      baseRate + 2,
+      baseRate - 2,
+      baseRate + 1,
+      baseRate + 3,
+      baseRate,
+    ]
+    const baseRecords = stats.value.todayRecords || 50
+    recordQualified.value = Array.from({ length: 7 }, () =>
+      Math.floor(baseRecords * (0.85 + Math.random() * 0.15)),
+    )
+    recordUnqualified.value = recordQualified.value.map(q =>
+      Math.max(0, Math.floor(q * (1 - (baseRate / 100)) + (Math.random() - 0.5) * 3)),
+    )
+  } catch {
     stats.value = getDefaultStats()
   } finally {
     loading.value = false
   }
-
-  // 模拟图表数据（实际项目应从后端获取）
-  const now = new Date()
-  const dates = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(now)
-    d.setDate(d.getDate() - (6 - i))
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${m}-${day}`
-  })
-  trendDates.value = dates
-  trendData.value = [92, 88, 95, 90, 94, 97, Math.round(stats.value.qualifiedRate || 93)]
-  recordQualified.value = [
-    45,
-    52,
-    38,
-    60,
-    55,
-    48,
-    Math.round((stats.value.todayRecords || 50) * 0.95),
-  ]
-  recordUnqualified.value = [3, 5, 2, 4, 6, 3, stats.value.unqualifiedCount || 3]
-
-  // 节点分布（模拟）
-  nodePieData.value = [
-    { name: 'A区-产线1', value: 35 },
-    { name: 'A区-产线2', value: 28 },
-    { name: 'B区-产线1', value: 20 },
-    { name: 'B区-产线2', value: 12 },
-    { name: '其他区域', value: 5 },
-  ]
-
-  recordLoading.value = true
-  try {
-    const res = await recordApi.page({ page: 1, pageSize: 10 })
-    const data = extractData(res)
-    recentRecords.value = data?.records ?? data?.list ?? []
-  } catch (e) {
-    console.warn('[Dashboard] 加载检测记录失败:', e)
-    recentRecords.value = []
-  } finally {
-    recordLoading.value = false
-  }
-})
+}
 
 function getDefaultStats(): Statistics {
   return {
@@ -97,6 +96,15 @@ function getDefaultStats(): Statistics {
   }
 }
 
+function flattenNodes(nodes: NodeTreeNode[]): NodeTreeNode[] {
+  const result: NodeTreeNode[] = []
+  for (const n of nodes) {
+    result.push(n)
+    if (n.children?.length) result.push(...flattenNodes(n.children))
+  }
+  return result
+}
+
 const statCards = [
   { key: 'totalItems', label: '检测项总数', icon: 'DocumentChecked', color: '#409eff' },
   { key: 'activeItems', label: '活跃检测项', icon: 'Check', color: '#67c23a' },
@@ -104,13 +112,14 @@ const statCards = [
   { key: 'todayRecords', label: '今日记录', icon: 'Clock', color: '#f56c6c' },
   { key: 'unqualifiedCount', label: '不合格数', icon: 'Warning', color: '#f56c6c' },
   { key: 'nodeCount', label: '节点数量', icon: 'Connection', color: '#909399' },
+  { key: 'departmentCount', label: '部门数量', icon: 'OfficeBuilding', color: '#9b59b6' },
 ]
 </script>
 
 <template>
   <div class="page-container">
     <div class="page-header">
-      <span class="page-title">仪表盘</span>
+      <span class="page-title">统计分析</span>
     </div>
 
     <!-- 统计卡片 -->
@@ -134,8 +143,8 @@ const statCards = [
     <el-row :gutter="16" style="margin-top: 16px">
       <el-col :xs="24" :lg="14">
         <div class="chart-card">
-          <div class="chart-title">合格率趋势</div>
-          <QualityTrendChart :dates="trendDates" :data="trendData" style="height: 220px" />
+          <div class="chart-title">合格率趋势（近7日）</div>
+          <QualityTrendChart :dates="trendDates" :data="trendData" style="height: 260px" />
         </div>
         <div class="chart-card" style="margin-top: 16px">
           <div class="chart-title">近7日检测记录</div>
@@ -143,39 +152,17 @@ const statCards = [
             :dates="trendDates"
             :qualified="recordQualified"
             :unqualified="recordUnqualified"
-            style="height: 220px"
+            style="height: 260px"
           />
         </div>
       </el-col>
       <el-col :xs="24" :lg="10">
-        <div class="chart-card" style="height: 580px">
+        <div class="chart-card" style="height: 552px">
           <div class="chart-title">节点检测分布</div>
-          <NodePieChart :data="nodePieData" style="height: 515px" />
+          <NodePieChart :data="nodePieData" style="height: 490px" />
         </div>
       </el-col>
     </el-row>
-
-    <!-- 最近检测记录 -->
-    <div class="page-table" style="margin-top: 16px">
-      <div class="table-header">
-        <span class="page-title">最近检测记录</span>
-      </div>
-
-      <el-table :data="recentRecords" v-loading="recordLoading" stripe style="width: 100%">
-        <el-table-column prop="itemName" label="检测项" min-width="160" />
-        <el-table-column prop="nodeName" label="节点" width="140" />
-        <el-table-column prop="value" label="检测值" width="100" />
-        <el-table-column prop="unit" label="单位" width="70" />
-        <el-table-column label="是否合格" width="100">
-          <template #default="{ row }">
-            <el-tag v-if="row.isQualified" type="success" size="small">合格</el-tag>
-            <el-tag v-else type="danger" size="small">不合格</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="inspector" label="检测人" width="100" />
-        <el-table-column prop="recordTime" label="检测时间" width="170" />
-      </el-table>
-    </div>
   </div>
 </template>
 
@@ -225,18 +212,6 @@ const statCards = [
   font-size: 13px;
   color: #909399;
   margin-top: 4px;
-}
-
-.table-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-
-  .page-title {
-    font-size: 16px;
-    font-weight: 600;
-  }
 }
 
 .chart-card {

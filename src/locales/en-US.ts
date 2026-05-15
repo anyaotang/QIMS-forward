@@ -222,6 +222,56 @@ export default {
     changePassword: 'Change Password',
   },
 
+  // ============ 角色 ============
+  role: {
+    title: 'Role Management',
+    name: 'Role Name',
+    code: 'Role Code',
+    status: 'Status',
+    dataScope: 'Data Scope',
+    remark: 'Remark',
+    description: 'Description',
+    createTime: 'Create Time',
+    addRole: 'Add Role',
+    editRole: 'Edit Role',
+    deleteRole: 'Delete Role',
+    deleteConfirm: 'Delete role "{name}"? Associated permissions will also be removed.',
+    assignPermission: 'Permissions',
+    assignPermissionTitle: 'Permissions - {name}',
+    assignSuccess: 'Permissions assigned successfully',
+    keywordPlaceholder: 'Role name / code',
+    codePlaceholder: 'e.g. admin, inspector',
+    namePlaceholder: 'e.g. Super Admin, Inspector',
+    codeRuleHint: 'Must start with a letter, only letters, digits, underscore and hyphen',
+    dataScopeAll: 'All Data',
+    dataScopeDept: 'Own Dept',
+    dataScopeDeptAndSub: 'Dept & Sub-depts',
+    dataScopeSelf: 'Self Only',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
+    toggleConfirm: '{action} role "{name}"?',
+    enable: 'Enable',
+    disable: 'Disable',
+  },
+
+  // ============ 语言 ============
+  locale: {
+    zh: '中文',
+    en: 'EN',
+    switchToLight: 'Switch to Light',
+    switchToDark: 'Switch to Dark',
+  },
+
+  // ============ 布局 ============
+  layout: {
+    home: 'Home',
+    profile: 'Profile',
+    logout: 'Logout',
+    logoutConfirm: 'Are you sure you want to logout?',
+    logoutHint: 'Confirm',
+  },
+
+  // ============ 错误 ============
   error: {
     404: 'Page Not Found',
     403: 'Access Denied',

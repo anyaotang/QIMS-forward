@@ -4,6 +4,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { usePermissionStore } from '@/stores/permission'
+import { setOnSessionExpired } from '@/utils/request'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
@@ -31,7 +32,7 @@ export const constantRoutes: RouteRecordRaw[] = [
         meta: { title: '仪表盘', icon: 'Odometer', affix: true },
       },
       {
-        path: 'profile',
+        path: 'profile/index',
         name: 'Profile',
         component: () => import('@/views/profile/index.vue'),
         meta: { title: '个人中心', icon: 'User', hidden: true },
@@ -67,6 +68,18 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/system/role/index.vue'),
         meta: { title: '角色管理', icon: 'Key', permission: 'role:manage' },
       },
+      {
+        path: 'permission',
+        name: 'PermissionManagement',
+        component: () => import('@/views/system/permission/index.vue'),
+        meta: { title: '权限管理', icon: 'Grid', permission: 'permission:manage' },
+      },
+      {
+        path: 'log',
+        name: 'LogManagement',
+        component: () => import('@/views/system/log/index.vue'),
+        meta: { title: '操作日志', icon: 'Document', permission: 'log:view' },
+      },
     ],
   },
   {
@@ -83,6 +96,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         meta: { title: '节点管理', icon: 'Connection', permission: 'node:manage' },
       },
       {
+        path: 'inspection',
+        name: 'InspectionTask',
+        component: () => import('@/views/quality/inspection/index.vue'),
+        meta: { title: '检测任务', icon: 'DocumentChecked', permission: 'inspection:manage' },
+      },
+      {
         path: 'inspection-item',
         name: 'InspectionItemManagement',
         component: () => import('@/views/quality/inspection-item/index.vue'),
@@ -95,10 +114,22 @@ export const asyncRoutes: RouteRecordRaw[] = [
         meta: { title: '检测记录', icon: 'List', permission: 'record:view' },
       },
       {
-        path: 'manual-entry',
-        name: 'ManualEntry',
+        path: 'plan',
+        name: 'QualityPlan',
+        component: () => import('@/views/implementation/plan/index.vue'),
+        meta: { title: '实施方案', icon: 'Tickets', permission: 'plan:manage' },
+      },
+      {
+        path: 'record',
+        name: 'QualityRecordManual',
         component: () => import('@/views/quality/manual-entry/index.vue'),
         meta: { title: '人工录入', icon: 'Edit', permission: 'record:manual' },
+      },
+      {
+        path: 'push',
+        name: 'PushManagement',
+        component: () => import('@/views/quality/push/index.vue'),
+        meta: { title: '推送管理', icon: 'Bell', permission: 'push:view' },
       },
     ],
   },
@@ -114,6 +145,27 @@ export const asyncRoutes: RouteRecordRaw[] = [
         name: 'QualityReport',
         component: () => import('@/views/report/quality/index.vue'),
         meta: { title: '质量报表', icon: 'TrendCharts', permission: 'report:view' },
+      },
+      {
+        path: 'statistics',
+        name: 'Statistics',
+        component: () => import('@/views/report/statistics/index.vue'),
+        meta: { title: '统计分析', icon: 'DataAnalysis', permission: 'statistics:view' },
+      },
+    ],
+  },
+  {
+    path: '/production',
+    name: 'Production',
+    component: () => import('@/layouts/MainLayout.vue'),
+    redirect: '/production/feedback',
+    meta: { title: '生产管理', icon: 'Box' },
+    children: [
+      {
+        path: 'feedback',
+        name: 'ProductionFeedback',
+        component: () => import('@/views/production/feedback/index.vue'),
+        meta: { title: '实施反馈', icon: 'ChatDotRound', permission: 'feedback:view' },
       },
     ],
   },
@@ -157,6 +209,31 @@ const router = createRouter({
   scrollBehavior: () => ({ left: 0, top: 0 }),
 })
 
+// ============ 注册会话过期回调 ============
+// 当 401 拦截器检测到会话过期时，清除 Pinia store 状态并软跳转到登录页
+// 避免使用 window.location.href 硬刷新导致应用状态丢失
+setOnSessionExpired(() => {
+  const userStore = useUserStore()
+  userStore.token = ''
+  userStore.userInfo = null
+  userStore.permissions = []
+  userStore.roles = []
+  userStore.menus = []
+  if (router.currentRoute.value.path !== '/login') {
+    router.replace('/login')
+  }
+})
+
+// ============ 超时工具函数 ============
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`[Router] ${label} 超时 (${ms}ms)`)), ms),
+    ),
+  ])
+}
+
 // ============ 全局前置守卫 ============
 router.beforeEach(async (to, _from) => {
   NProgress.start()
@@ -164,13 +241,13 @@ router.beforeEach(async (to, _from) => {
 
   const userStore = useUserStore()
 
-  // 检查 URL 中是否有 token 参数
+  // 检查 URL 中是否有 token 参数（用于免登录访问）
   const urlToken = new URLSearchParams(window.location.search).get('token')
   if (urlToken && !userStore.isLoggedIn) {
     try {
-      await userStore.urlLogin(urlToken)
-    } catch {
-      // ignore
+      await withTimeout(userStore.urlLogin(urlToken), 8000, 'urlLogin')
+    } catch (e) {
+      console.warn('[Router] URL 登录失败:', e)
     }
   }
 
@@ -185,21 +262,21 @@ router.beforeEach(async (to, _from) => {
     return `/login?redirect=${to.fullPath}`
   }
 
+  // 获取用户信息（5秒超时，防止阻塞导航）
   if (!userStore.userInfo) {
     try {
-      await userStore.fetchUserInfo()
-    } catch {
-      // fetchUserInfo 内部已捕获异常并返回 null
-      // 如果失败，用户仍有 token 和权限，允许继续导航
+      await withTimeout(userStore.fetchUserInfo(), 5000, 'fetchUserInfo')
+    } catch (e) {
+      console.warn('[Router] 获取用户信息失败，不阻断导航:', e)
     }
   }
 
-  // 加载菜单树（页面刷新时需要重新获取）
+  // 加载菜单树（5秒超时，失败则显示空菜单不阻断）
   if (userStore.menus.length === 0) {
     try {
-      await userStore.fetchMenus()
-    } catch {
-      // ignore - 菜单获取失败不阻断导航
+      await withTimeout(userStore.fetchMenus(), 5000, 'fetchMenus')
+    } catch (e) {
+      console.warn('[Router] 获取菜单失败，显示空菜单:', e)
     }
   }
 

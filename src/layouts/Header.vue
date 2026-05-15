@@ -24,9 +24,9 @@ const localeStore = useLocaleStore()
 const { t, locale } = useI18n()
 
 async function handleLogout() {
-  await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
+  await ElMessageBox.confirm(t('layout.logoutConfirm'), t('layout.logoutHint'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
     type: 'warning',
   })
   await userStore.logout()
@@ -49,7 +49,7 @@ function handleLocaleChange(val: string) {
 
       <!-- 面包屑 -->
       <el-breadcrumb separator="/">
-        <el-breadcrumb-item :to="{ path: '/dashboard' }">首页</el-breadcrumb-item>
+        <el-breadcrumb-item :to="{ path: '/dashboard' }">{{ t('layout.home') }}</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
 
@@ -61,7 +61,7 @@ function handleLocaleChange(val: string) {
       </el-badge>
 
       <!-- 主题切换 -->
-      <el-tooltip :content="themeStore.isDark ? '切换亮色' : '切换暗色'" placement="bottom">
+      <el-tooltip :content="themeStore.isDark ? t('locale.switchToLight') : t('locale.switchToDark')" placement="bottom">
         <el-button text @click="themeStore.toggleTheme">
           <el-icon size="20">
             <Moon v-if="!themeStore.isDark" />
@@ -73,7 +73,7 @@ function handleLocaleChange(val: string) {
       <!-- 语言切换 -->
       <el-dropdown @command="handleLocaleChange" trigger="click">
         <el-button text>
-          <span class="locale-label">{{ localeStore.isZhCN ? '中文' : 'EN' }}</span>
+          <span class="locale-label">{{ localeStore.isZhCN ? t('locale.zh') : t('locale.en') }}</span>
         </el-button>
         <template #dropdown>
           <el-dropdown-menu>
@@ -101,11 +101,11 @@ function handleLocaleChange(val: string) {
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item @click="router.push('/profile/index')">
-              个人中心
+              {{ t('layout.profile') }}
             </el-dropdown-item>
             <el-dropdown-item divided @click="handleLogout">
               <el-icon><SwitchButton /></el-icon>
-              退出登录
+              {{ t('layout.logout') }}
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>

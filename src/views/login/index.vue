@@ -29,9 +29,12 @@ async function handleLogin() {
   try {
     await userStore.login(form)
     ElMessage.success(t('login.loginSuccess'))
-    router.push('/dashboard')
-  } catch {
-    // error handled by interceptor
+    // 使用 replace 避免用户按后退键回到登录页
+    // redirect 参数支持：登录后跳回之前被拦截的页面
+    const redirect = router.currentRoute.value.query.redirect as string
+    await router.replace(redirect || '/dashboard')
+  } catch (e) {
+    console.error('[Login] 登录失败:', e)
   } finally {
     loading.value = false
   }

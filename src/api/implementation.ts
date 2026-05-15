@@ -11,5 +11,15 @@ export const implementationApi = {
     params
   }),
   /** 提交反馈 */
-  submitFeedback: (data: FeedbackForm) => request.post('/implementation/feedback', data),
+  submitFeedback: (data: FeedbackForm) =>
+    request.post('/implementation/feedback', data),
+  /** 新增方案 */
+  addPlan: (data: Partial<ImplementationPlan>) =>
+    request.post('/implementation/plan', data),
+  /** 更新方案 */
+  updatePlan: (data: Partial<ImplementationPlan>) =>
+    request.put('/implementation/plan', data),
+  /** 删除方案 */
+  deletePlan: (id: number) =>
+    request.delete(`/implementation/plan/${id}`),
 }
