@@ -21,13 +21,17 @@
 - [1. 认证模块](#1-认证模块-auth)
 - [2. 用户模块](#2-用户模块-user)
 - [3. 部门模块](#3-部门模块-department)
-- [4. 节点模块](#4-节点模块-node)
-- [5. 检测项模块](#5-检测项模块-inspectionitem)
-- [6. 检测记录模块](#6-检测记录模块-record)
-- [7. 报表模块](#7-报表模块-report)
-- [8. 实施方案模块](#8-实施方案模块-implementation)
-- [9. 统计模块](#9-统计模块-statistics)
-- [10. 字典模块](#10-字典模块-dict)
+- [4. 角色模块](#4-角色模块-role)
+- [5. 权限模块](#5-权限模块-permission)
+- [6. 节点模块](#6-节点模块-node)
+- [7. 检测项模块](#7-检测项模块-inspectionitem)
+- [8. 检测任务模块](#8-检测任务模块-inspectiontask)
+- [9. 检测记录模块](#9-检测记录模块-record)
+- [10. 报表模块](#10-报表模块-report)
+- [11. 实施方案模块](#11-实施方案模块-implementation)
+- [12. 统计模块](#12-统计模块-statistics)
+- [13. 字典模块](#13-字典模块-dict)
+- [14. 日志模块](#14-日志模块-log)
 
 ---
 
@@ -83,7 +87,7 @@ interface LoginVO {
 **响应数据** (`UserInfo`):
 ```ts
 interface UserInfo {
-  userId: number
+  id: string
   username: string
   nickname?: string
   email?: string
@@ -143,7 +147,65 @@ interface DepartmentTreeNode {
 
 ---
 
-## 4. 节点模块 (`/node`)
+## 4. 角色模块 (`/role`)
+
+| 接口 | 方法 | 路径 | 说明 |
+|------|------|------|------|
+| `roleApi.page` | GET | `/role/page?page=&pageSize=&keyword=` | 分页查询角色列表 |
+| `roleApi.detail` | GET | `/role/:id` | 获取角色详情 |
+| `roleApi.create` | POST | `/role` | 创建角色 |
+| `roleApi.update` | PUT | `/role` | 更新角色 |
+| `roleApi.delete` | DELETE | `/role/:id` | 删除角色 |
+| `roleApi.permissions` | GET | `/role/:id/permissions` | 获取角色权限 |
+| `roleApi.assignPermissions` | POST | `/role/:id/permissions` | 分配角色权限 |
+
+### POST /role
+
+**请求体** (`RoleForm`):
+```ts
+interface RoleForm {
+  id?: number
+  name: string
+  code: string
+  status: number
+  dataScope?: number
+  remark?: string
+}
+```
+
+---
+
+## 5. 权限模块 (`/permission`)
+
+| 接口 | 方法 | 路径 | 说明 |
+|------|------|------|------|
+| `permissionApi.menuTree` | GET | `/permission/menu-tree` | 获取菜单树（含权限信息） |
+| `permissionApi.list` | GET | `/permission/list` | 获取权限列表 |
+| `permissionApi.create` | POST | `/permission` | 创建权限 |
+| `permissionApi.update` | PUT | `/permission` | 更新权限 |
+| `permissionApi.delete` | DELETE | `/permission/:id` | 删除权限 |
+
+### GET /permission/menu-tree
+
+**响应数据**: `MenuDTO[]`
+
+```ts
+interface MenuDTO {
+  id: number
+  name: string
+  code: string
+  type: number // 1=菜单 2=按钮
+  parentId?: number | null
+  sort?: number
+  path?: string
+  icon?: string
+  children?: MenuDTO[]
+}
+```
+
+---
+
+## 6. 节点模块 (`/node`)
 
 | 接口 | 方法 | 路径 | 说明 |
 |------|------|------|------|
@@ -178,7 +240,7 @@ interface NodeTreeNode {
 
 ---
 
-## 5. 检测项模块 (`/inspectionitem`)
+## 7. 检测项模块 (`/inspectionitem`)
 
 | 接口 | 方法 | 路径 | 说明 |
 |------|------|------|------|
@@ -199,7 +261,87 @@ interface NodeTreeNode {
 
 ---
 
-## 6. 检测记录模块 (`/record`)
+## 8. 检测任务模块 (`/inspectiontask`)
+
+| 接口 | 方法 | 路径 | 说明 |
+|------|------|------|------|
+| `inspectionTaskApi.page` | GET | `/inspectiontask/page?page=&pageSize=&nodeId=&status=` | 分页查询检测任务 |
+| `inspectionTaskApi.detail` | GET | `/inspectiontask/:id` | 获取检测任务详情（含检测项列表） |
+| `inspectionTaskApi.create` | POST | `/inspectiontask` | 创建检测任务 |
+| `inspectionTaskApi.update` | PUT | `/inspectiontask` | 更新检测任务 |
+| `inspectionTaskApi.delete` | DELETE | `/inspectiontask/:id` | 删除检测任务 |
+| `inspectionTaskApi.start` | POST | `/inspectiontask/:id/start` | 开始检测任务 |
+| `inspectionTaskApi.complete` | POST | `/inspectiontask/:id/complete` | 完成检测任务 |
+| `inspectionTaskApi.cancel` | POST | `/inspectiontask/:id/cancel` | 取消检测任务 |
+| `inspectionTaskApi.submitItem` | POST | `/inspectiontask/:id/item` | 提交单个检测项结果 |
+
+### POST /inspectiontask
+
+**请求体** (`InspectionTaskForm`):
+```ts
+interface InspectionTaskForm {
+  id?: number
+  name: string
+  code: string
+  nodeId: number
+  planStartTime?: string
+  planEndTime?: string
+  inspector?: string
+  remark?: string
+  itemIds?: number[]
+}
+```
+
+### GET /inspectiontask/:id
+
+**响应数据** (`InspectionTaskDetail`):
+```ts
+interface InspectionTaskDetail extends InspectionTask {
+  items: InspectionTaskItem[]
+}
+
+interface InspectionTask {
+  id: number
+  name: string
+  code: string
+  nodeId: number
+  nodeName?: string
+  status: number // 0=待检测 1=检测中 2=已完成 3=已取消
+  totalItems: number
+  completedItems: number
+  qualifiedCount: number
+  unqualifiedCount: number
+  planStartTime?: string
+  planEndTime?: string
+  actualStartTime?: string
+  actualEndTime?: string
+  inspector?: string
+  remark?: string
+}
+
+interface InspectionTaskItem {
+  id: number
+  taskId: number
+  itemId: number
+  itemName: string
+  itemCode: string
+  targetValue?: number
+  unit?: string
+  upperLimit?: number
+  lowerLimit?: number
+  actualValue?: number
+  deviation?: number
+  isQualified?: boolean
+  status: number // 0=待检测 1=已检测 2=跳过
+  recordTime?: string
+  inspector?: string
+  remark?: string
+}
+```
+
+---
+
+## 9. 检测记录模块 (`/record`)
 
 | 接口 | 方法 | 路径 | 说明 |
 |------|------|------|------|
@@ -222,22 +364,27 @@ interface ManualRecordForm {
 
 ---
 
-## 7. 报表模块 (`/report`)
+## 10. 报表模块 (`/report`)
 
 | 接口 | 方法 | 路径 | 说明 |
 |------|------|------|------|
 | `reportApi.quality` | GET | `/report/quality?page=&pageSize=&nodeId=&itemId=&startDate=&endDate=&isQualified=` | 质量报表（分页） |
 | `reportApi.export` | GET | `/report/quality/export?...` | 导出质量报表（返回 Blob/Excel 文件） |
 
-> ⚠️ `export` 接口直接请求 `${VITE_API_BASE_URL}/report/quality/export`，绕过axios baseURL，确保文件下载正确。
+> ⚠️ `export` 接口直接请求 `${VITE_API_BASE_URL}/report/quality/export`，绕过 axios baseURL，确保文件下载正确。
 
 ---
 
-## 8. 实施方案模块 (`/implementation`)
+## 11. 实施方案模块 (`/implementation`)
 
 | 接口 | 方法 | 路径 | 说明 |
 |------|------|------|------|
 | `implementationApi.planTree` | GET | `/implementation/plan/tree?nodeId=&status=` | 获取实施方案树（按节点/状态筛选） |
+| `implementationApi.planList` | GET | `/implementation/plan/list?page=&pageSize=` | 分页查询实施方案列表 |
+| `implementationApi.planDetail` | GET | `/implementation/plan/:id` | 获取实施方案详情 |
+| `implementationApi.createPlan` | POST | `/implementation/plan` | 创建实施方案 |
+| `implementationApi.updatePlan` | PUT | `/implementation/plan` | 更新实施方案 |
+| `implementationApi.deletePlan` | DELETE | `/implementation/plan/:id` | 删除实施方案 |
 | `implementationApi.submitFeedback` | POST | `/implementation/feedback` | 提交实施方案反馈 |
 
 ### POST /implementation/feedback
@@ -250,9 +397,30 @@ interface FeedbackForm {
 }
 ```
 
+### GET /implementation/plan/tree
+
+**响应数据**: `ImplementationPlan[]`
+
+```ts
+interface ImplementationPlan {
+  id?: number
+  name?: string
+  description?: string
+  deadline?: string
+  responsible?: string
+  parentId?: number
+  status?: number // 0=未开始, 1=进行中, 2=已完成
+  feedback?: string
+  feedbackTime?: string
+  nodeId?: number
+  nodeName?: string
+  children?: ImplementationPlan[]
+}
+```
+
 ---
 
-## 9. 统计模块 (`/statistics`)
+## 12. 统计模块 (`/statistics`)
 
 | 接口 | 方法 | 路径 | 说明 |
 |------|------|------|------|
@@ -275,7 +443,7 @@ interface Statistics {
 
 ---
 
-## 10. 字典模块 (`/dict`)
+## 13. 字典模块 (`/dict`)
 
 | 接口 | 方法 | 路径 | 说明 |
 |------|------|------|------|
@@ -290,6 +458,35 @@ interface DictData {
   label: string
   value: number | string
   type: string
+}
+```
+
+---
+
+## 14. 日志模块 (`/log`)
+
+| 接口 | 方法 | 路径 | 说明 |
+|------|------|------|------|
+| `logApi.page` | GET | `/log/page?page=&pageSize=&username=&module=&startDate=&endDate=` | 分页查询操作日志 |
+| `logApi.detail` | GET | `/log/:id` | 获取日志详情 |
+
+### GET /log/page
+
+**响应数据**: `PageResult<LogInfo>`
+
+```ts
+interface LogInfo {
+  id: number
+  username: string
+  module: string
+  description: string
+  method: string
+  url: string
+  ip: string
+  params: string
+  result: string
+  duration: number
+  createTime: string
 }
 ```
 
@@ -315,4 +512,13 @@ import type { MenuDTO } from '@/types/api'
 const res = await authApi.menus()
 const menus: MenuDTO[] = extractData(res)
 // menus 用于 Sidebar 动态渲染
+```
+
+```ts
+// 使用 inspectionTaskApi
+import { inspectionTaskApi } from '@/api/inspectionTask'
+import type { InspectionTaskDetail } from '@/types/api'
+
+const res = await inspectionTaskApi.detail(taskId)
+const task: InspectionTaskDetail = extractData(res)
 ```

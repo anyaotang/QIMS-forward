@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {extractData} from '@/utils/request'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { extractData } from '@/utils/request'
 import type {
   NodeTreeNode,
   InspectionItem,
@@ -9,9 +9,9 @@ import type {
   InspectionTaskDetail,
   InspectionTaskItem,
 } from '@/types/api'
-import {inspectionTaskApi} from '@/api/inspectionTask'
-import {inspectionItemApi} from '@/api/inspectionItem'
-import {nodeApi} from '@/api/node'
+import { inspectionTaskApi } from '@/api/inspectionTask'
+import { inspectionItemApi } from '@/api/inspectionItem'
+import { nodeApi } from '@/api/node'
 import {
   Plus,
   Search,
@@ -22,8 +22,11 @@ import {
   VideoPlay,
   CircleCheck,
   CircleClose,
-  WarningFilled,
 } from '@element-plus/icons-vue'
+
+defineOptions({
+  name: 'InspectionTask',
+})
 
 // ============ 列表状态 ============
 const loading = ref(false)
@@ -35,18 +38,18 @@ const queryForm = reactive({
   page: 1,
   pageSize: 20,
   keyword: '',
-  nodeId: undefined as number | undefined,
-  status: undefined as number | undefined,
+  nodeId: null as number | null,
+  status: null as number | null,
   startDate: '',
   endDate: '',
 })
 
 // 状态选项
 const statusOptions = [
-  {label: '待检测', value: 0, type: 'info'},
-  {label: '检测中', value: 1, type: 'warning'},
-  {label: '已完成', value: 2, type: 'success'},
-  {label: '已取消', value: 3, type: 'danger'},
+  { label: '待检测', value: 0, type: 'info' },
+  { label: '检测中', value: 1, type: 'warning' },
+  { label: '已完成', value: 2, type: 'success' },
+  { label: '已取消', value: 3, type: 'danger' },
 ]
 
 // ============ 新增/编辑弹窗 ============
@@ -64,9 +67,9 @@ const formData = reactive<InspectionTaskForm>({
   itemIds: [],
 })
 const formRules = {
-  name: [{required: true, message: '请输入任务名称', trigger: 'blur'}],
-  code: [{required: true, message: '请输入任务编码', trigger: 'blur'}],
-  nodeId: [{required: true, message: '请选择检测节点', trigger: 'change'}],
+  name: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
+  code: [{ required: true, message: '请输入任务编码', trigger: 'blur' }],
+  nodeId: [{ required: true, message: '请选择检测节点', trigger: 'change' }],
 }
 
 // 节点下可选检测项
@@ -95,7 +98,7 @@ const recordForm = reactive({
   remark: '',
 })
 const recordRules = {
-  actualValue: [{required: true, message: '请输入检测值', trigger: 'blur'}],
+  actualValue: [{ required: true, message: '请输入检测值', trigger: 'blur' }],
 }
 
 // ============ 生命周期 ============
@@ -111,7 +114,7 @@ async function loadTable() {
     const res = await inspectionTaskApi.page(queryForm)
     const data = extractData(res)
     tableData.value = data.records
-    total.value = data.total
+    total.value = Number(data.total)
   } catch (e) {
     console.error('[Inspection] 加载任务列表失败:', e)
     tableData.value = []
@@ -139,8 +142,8 @@ function onReset() {
     page: 1,
     pageSize: 20,
     keyword: '',
-    nodeId: undefined,
-    status: undefined,
+    nodeId: null,
+    status: null,
     startDate: '',
     endDate: '',
   })
@@ -195,7 +198,7 @@ async function loadItemsByNode(nodeId: number) {
   }
   loadingItems.value = true
   try {
-    const res = await inspectionItemApi.page({page: 1, pageSize: 200, nodeId})
+    const res = await inspectionItemApi.page({ page: 1, pageSize: 200, nodeId })
     const data = extractData(res)
     availableItems.value = data.records || []
   } catch {
@@ -225,7 +228,7 @@ async function handleSave() {
 
 // ============ 任务操作 ============
 async function handleStart(row: InspectionTask) {
-  await ElMessageBox.confirm('确定启动该检测任务？', '提示', {type: 'warning'})
+  await ElMessageBox.confirm('确定启动该检测任务？', '提示', { type: 'warning' })
   try {
     await inspectionTaskApi.start(row.id)
     ElMessage.success('任务已启动')
@@ -236,7 +239,9 @@ async function handleStart(row: InspectionTask) {
 }
 
 async function handleComplete(row: InspectionTask) {
-  await ElMessageBox.confirm('确定完成该检测任务？完成后将无法再录入数据。', '提示', {type: 'warning'})
+  await ElMessageBox.confirm('确定完成该检测任务？完成后将无法再录入数据。', '提示', {
+    type: 'warning',
+  })
   try {
     await inspectionTaskApi.complete(row.id)
     ElMessage.success('任务已完成')
@@ -247,7 +252,7 @@ async function handleComplete(row: InspectionTask) {
 }
 
 async function handleCancel(row: InspectionTask) {
-  await ElMessageBox.confirm('确定取消该检测任务？', '提示', {type: 'warning'})
+  await ElMessageBox.confirm('确定取消该检测任务？', '提示', { type: 'warning' })
   try {
     await inspectionTaskApi.cancel(row.id)
     ElMessage.success('任务已取消')
@@ -258,7 +263,7 @@ async function handleCancel(row: InspectionTask) {
 }
 
 async function handleDelete(row: InspectionTask) {
-  await ElMessageBox.confirm('确定删除该检测任务？', '提示', {type: 'warning'})
+  await ElMessageBox.confirm('确定删除该检测任务？', '提示', { type: 'warning' })
   try {
     await inspectionTaskApi.delete(row.id)
     ElMessage.success('删除成功')
@@ -326,7 +331,7 @@ async function handleRecord() {
 
 // ============ 工具方法 ============
 function getStatusTag(status: number) {
-  return statusOptions.find(s => s.value === status) || statusOptions[0]
+  return statusOptions.find((s) => s.value === status) || statusOptions[0]
 }
 
 function getQualifiedRate(row: InspectionTask) {
@@ -344,12 +349,12 @@ function getQualifiedRateClass(row: InspectionTask) {
 }
 
 function getItemStatusTag(status: number) {
-  const map: Record<number, {label: string; type: string}> = {
-    0: {label: '待检测', type: 'info'},
-    1: {label: '已检测', type: 'success'},
-    2: {label: '跳过', type: 'warning'},
+  const map: Record<number, { label: string; type: string }> = {
+    0: { label: '待检测', type: 'info' },
+    1: { label: '已检测', type: 'success' },
+    2: { label: '跳过', type: 'warning' },
   }
-  return map[status] || {label: '未知', type: 'info'}
+  return map[status] || { label: '未知', type: 'info' }
 }
 </script>
 
@@ -373,7 +378,7 @@ function getItemStatusTag(status: number) {
             @keyup.enter="onSearch"
           >
             <template #prefix>
-              <el-icon><Search/></el-icon>
+              <el-icon><Search /></el-icon>
             </template>
           </el-input>
         </el-form-item>
@@ -381,7 +386,7 @@ function getItemStatusTag(status: number) {
           <el-tree-select
             v-model="queryForm.nodeId"
             :data="nodeTree"
-            :props="{label: 'name', value: 'id', children: 'children'}"
+            :props="{ label: 'name', value: 'id', children: 'children' }"
             placeholder="全部节点"
             clearable
             check-strictly
@@ -389,7 +394,12 @@ function getItemStatusTag(status: number) {
           />
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="queryForm.status" placeholder="全部状态" clearable style="width: 130px">
+          <el-select
+            v-model="queryForm.status"
+            placeholder="全部状态"
+            clearable
+            style="width: 130px"
+          >
             <el-option
               v-for="s in statusOptions"
               :key="s.value"
@@ -406,7 +416,7 @@ function getItemStatusTag(status: number) {
             value-format="YYYY-MM-DD"
             style="width: 140px"
           />
-          <span style="margin: 0 4px; color: #c0c4cc;">—</span>
+          <span style="margin: 0 4px; color: #c0c4cc">—</span>
           <el-date-picker
             v-model="queryForm.endDate"
             type="date"
@@ -425,9 +435,9 @@ function getItemStatusTag(status: number) {
     <!-- 任务列表 -->
     <div class="page-table">
       <el-table :data="tableData" v-loading="loading" stripe>
-        <el-table-column prop="code" label="任务编码" width="140" show-overflow-tooltip/>
-        <el-table-column prop="name" label="任务名称" min-width="160" show-overflow-tooltip/>
-        <el-table-column prop="nodeName" label="检测节点" width="130" show-overflow-tooltip/>
+        <el-table-column prop="code" label="任务编码" width="140" show-overflow-tooltip />
+        <el-table-column prop="name" label="任务名称" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="nodeName" label="检测节点" width="130" show-overflow-tooltip />
         <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="getStatusTag(row.status).type" size="small">
@@ -437,9 +447,7 @@ function getItemStatusTag(status: number) {
         </el-table-column>
         <el-table-column label="进度" width="120" align="center">
           <template #default="{ row }">
-            <span style="font-size: 13px;">
-              {{ row.completedItems }} / {{ row.totalItems }}
-            </span>
+            <span style="font-size: 13px"> {{ row.completedItems }} / {{ row.totalItems }} </span>
           </template>
         </el-table-column>
         <el-table-column label="合格率" width="90" align="center">
@@ -449,17 +457,17 @@ function getItemStatusTag(status: number) {
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="inspector" label="检测人" width="90"/>
+        <el-table-column prop="inspector" label="检测人" width="90" />
         <el-table-column label="计划时间" width="170">
           <template #default="{ row }">
-            <div style="font-size: 12px; line-height: 1.6;">
+            <div style="font-size: 12px; line-height: 1.6">
               <div v-if="row.planStartTime">{{ row.planStartTime }}</div>
-              <div v-if="row.planEndTime" style="color: #909399;">~ {{ row.planEndTime }}</div>
-              <span v-if="!row.planStartTime && !row.planEndTime" style="color: #c0c4cc;">-</span>
+              <div v-if="row.planEndTime" style="color: #909399">~ {{ row.planEndTime }}</div>
+              <span v-if="!row.planStartTime && !row.planEndTime" style="color: #c0c4cc">-</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="170"/>
+        <el-table-column prop="createTime" label="创建时间" width="170" />
 
         <el-table-column label="操作" width="260" fixed="right" align="center">
           <template #default="{ row }">
@@ -468,35 +476,50 @@ function getItemStatusTag(status: number) {
             </el-button>
             <el-button
               v-if="row.status === 0"
-              type="warning" link size="small" :icon="VideoPlay"
+              type="warning"
+              link
+              size="small"
+              :icon="VideoPlay"
               @click="handleStart(row)"
             >
               启动
             </el-button>
             <el-button
               v-if="row.status === 0"
-              type="primary" link size="small" :icon="Edit"
+              type="primary"
+              link
+              size="small"
+              :icon="Edit"
               @click="openEdit(row)"
             >
               编辑
             </el-button>
             <el-button
               v-if="row.status === 1"
-              type="success" link size="small" :icon="CircleCheck"
+              type="success"
+              link
+              size="small"
+              :icon="CircleCheck"
               @click="handleComplete(row)"
             >
               完成
             </el-button>
             <el-button
               v-if="row.status === 0 || row.status === 1"
-              type="danger" link size="small" :icon="CircleClose"
+              type="danger"
+              link
+              size="small"
+              :icon="CircleClose"
               @click="handleCancel(row)"
             >
               取消
             </el-button>
             <el-button
               v-if="row.status === 0"
-              type="danger" link size="small" :icon="Delete"
+              type="danger"
+              link
+              size="small"
+              :icon="Delete"
               @click="handleDelete(row)"
             >
               删除
@@ -528,12 +551,12 @@ function getItemStatusTag(status: number) {
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="任务名称" prop="name">
-              <el-input v-model="formData.name" placeholder="如：2026年5月产线A巡检"/>
+              <el-input v-model="formData.name" placeholder="如：2026年5月产线A巡检" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="任务编码" prop="code">
-              <el-input v-model="formData.code" placeholder="如：INS-20260515-001"/>
+              <el-input v-model="formData.code" placeholder="如：INS-20260515-001" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -542,7 +565,7 @@ function getItemStatusTag(status: number) {
           <el-tree-select
             v-model="formData.nodeId"
             :data="nodeTree"
-            :props="{label: 'name', value: 'id', children: 'children'}"
+            :props="{ label: 'name', value: 'id', children: 'children' }"
             placeholder="选择检测节点"
             clearable
             check-strictly
@@ -577,30 +600,30 @@ function getItemStatusTag(status: number) {
         </el-row>
 
         <el-form-item label="检测人">
-          <el-input v-model="formData.inspector" placeholder="负责人姓名"/>
+          <el-input v-model="formData.inspector" placeholder="负责人姓名" />
         </el-form-item>
 
         <!-- 检测项选择 -->
         <el-form-item label="检测项">
-          <div v-if="!formData.nodeId" style="color: #909399; font-size: 13px;">
+          <div v-if="!formData.nodeId" style="color: #909399; font-size: 13px">
             请先选择检测节点
           </div>
           <el-checkbox-group
             v-else
             v-model="formData.itemIds"
             v-loading="loadingItems"
-            style="width: 100%;"
+            style="width: 100%"
           >
             <el-row :gutter="8">
               <el-col
                 v-for="item in availableItems"
                 :key="item.id"
                 :span="12"
-                style="margin-bottom: 4px;"
+                style="margin-bottom: 4px"
               >
                 <el-checkbox :value="item.id" :label="item.id">
                   <span>{{ item.name }}</span>
-                  <span style="color: #909399; font-size: 12px; margin-left: 4px;">
+                  <span style="color: #909399; font-size: 12px; margin-left: 4px">
                     ({{ item.code }})
                   </span>
                 </el-checkbox>
@@ -610,7 +633,7 @@ function getItemStatusTag(status: number) {
         </el-form-item>
 
         <el-form-item label="备注">
-          <el-input v-model="formData.remark" type="textarea" :rows="2"/>
+          <el-input v-model="formData.remark" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
 
@@ -621,16 +644,11 @@ function getItemStatusTag(status: number) {
     </el-dialog>
 
     <!-- 详情抽屉 -->
-    <el-drawer
-      v-model="drawerVisible"
-      title="检测任务详情"
-      size="640px"
-      destroy-on-close
-    >
+    <el-drawer v-model="drawerVisible" title="检测任务详情" size="640px" destroy-on-close>
       <div v-loading="drawerLoading">
         <template v-if="taskDetail">
           <!-- 基本信息 -->
-          <el-descriptions :column="2" border size="small" style="margin-bottom: 20px;">
+          <el-descriptions :column="2" border size="small" style="margin-bottom: 20px">
             <el-descriptions-item label="任务编码">{{ taskDetail.code }}</el-descriptions-item>
             <el-descriptions-item label="任务名称">{{ taskDetail.name }}</el-descriptions-item>
             <el-descriptions-item label="检测节点">{{ taskDetail.nodeName }}</el-descriptions-item>
@@ -639,7 +657,9 @@ function getItemStatusTag(status: number) {
                 {{ getStatusTag(taskDetail.status).label }}
               </el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="检测人">{{ taskDetail.inspector || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="检测人">{{
+              taskDetail.inspector || '-'
+            }}</el-descriptions-item>
             <el-descriptions-item label="合格率">
               <span :class="getQualifiedRateClass(taskDetail)">
                 {{ getQualifiedRate(taskDetail) }}
@@ -654,48 +674,56 @@ function getItemStatusTag(status: number) {
           </el-descriptions>
 
           <!-- 进度条 -->
-          <div style="margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-              <span style="font-size: 13px; font-weight: 500;">检测进度</span>
-              <span style="font-size: 13px; color: #909399;">
+          <div style="margin-bottom: 20px">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px">
+              <span style="font-size: 13px; font-weight: 500">检测进度</span>
+              <span style="font-size: 13px; color: #909399">
                 {{ taskDetail.completedItems }} / {{ taskDetail.totalItems }}
               </span>
             </div>
             <el-progress
-              :percentage="taskDetail.totalItems ? Math.round((taskDetail.completedItems / taskDetail.totalItems) * 100) : 0"
+              :percentage="
+                taskDetail.totalItems
+                  ? Math.round((taskDetail.completedItems / taskDetail.totalItems) * 100)
+                  : 0
+              "
               :color="taskDetail.unqualifiedCount > 0 ? '#e6a23c' : '#409eff'"
             />
           </div>
 
           <!-- 检测项列表 -->
-          <h4 style="margin-bottom: 12px; font-size: 14px;">检测项明细</h4>
+          <h4 style="margin-bottom: 12px; font-size: 14px">检测项明细</h4>
           <el-table :data="taskItems" size="small" stripe border>
-            <el-table-column prop="itemCode" label="编码" width="110"/>
-            <el-table-column prop="itemName" label="名称" min-width="120" show-overflow-tooltip/>
+            <el-table-column prop="itemCode" label="编码" width="110" />
+            <el-table-column prop="itemName" label="名称" min-width="120" show-overflow-tooltip />
             <el-table-column label="目标值" width="90" align="center">
-              <template #default="{ row }">
-                {{ row.targetValue }} {{ row.unit }}
-              </template>
+              <template #default="{ row }"> {{ row.targetValue }} {{ row.unit }} </template>
             </el-table-column>
             <el-table-column label="范围" width="120" align="center">
               <template #default="{ row }">
-                <span style="font-size: 12px;">{{ row.lowerLimit }} ~ {{ row.upperLimit }}</span>
+                <span style="font-size: 12px">{{ row.lowerLimit }} ~ {{ row.upperLimit }}</span>
               </template>
             </el-table-column>
             <el-table-column label="检测值" width="90" align="center">
               <template #default="{ row }">
-                <span v-if="row.status === 1" :class="row.isQualified ? 'cell-qualified' : 'cell-unqualified'">
+                <span
+                  v-if="row.status === 1"
+                  :class="row.isQualified ? 'cell-qualified' : 'cell-unqualified'"
+                >
                   {{ row.actualValue }}
                 </span>
-                <span v-else style="color: #c0c4cc;">-</span>
+                <span v-else style="color: #c0c4cc">-</span>
               </template>
             </el-table-column>
             <el-table-column label="偏差" width="80" align="center">
               <template #default="{ row }">
-                <span v-if="row.status === 1" :class="row.isQualified ? 'cell-qualified' : 'cell-unqualified'">
+                <span
+                  v-if="row.status === 1"
+                  :class="row.isQualified ? 'cell-qualified' : 'cell-unqualified'"
+                >
                   {{ row.deviation }}
                 </span>
-                <span v-else style="color: #c0c4cc;">-</span>
+                <span v-else style="color: #c0c4cc">-</span>
               </template>
             </el-table-column>
             <el-table-column label="状态" width="80" align="center">
@@ -716,7 +744,11 @@ function getItemStatusTag(status: number) {
                 >
                   录入
                 </el-button>
-                <el-tag v-else-if="row.status === 1" :type="row.isQualified ? 'success' : 'danger'" size="small">
+                <el-tag
+                  v-else-if="row.status === 1"
+                  :type="row.isQualified ? 'success' : 'danger'"
+                  size="small"
+                >
                   {{ row.isQualified ? '合格' : '不合格' }}
                 </el-tag>
               </template>
@@ -724,17 +756,12 @@ function getItemStatusTag(status: number) {
           </el-table>
         </template>
 
-        <el-empty v-else description="暂无数据"/>
+        <el-empty v-else description="暂无数据" />
       </div>
     </el-drawer>
 
     <!-- 录入检测值弹窗 -->
-    <el-dialog
-      v-model="recordDialogVisible"
-      title="录入检测值"
-      width="480px"
-      destroy-on-close
-    >
+    <el-dialog v-model="recordDialogVisible" title="录入检测值" width="480px" destroy-on-close>
       <el-form ref="recordFormRef" :model="recordForm" :rules="recordRules" label-width="100px">
         <el-form-item label="检测项">
           <span>{{ recordForm.itemName }}</span>
@@ -754,10 +781,10 @@ function getItemStatusTag(status: number) {
           />
         </el-form-item>
         <el-form-item label="检测人">
-          <el-input v-model="recordForm.inspector" placeholder="可选"/>
+          <el-input v-model="recordForm.inspector" placeholder="可选" />
         </el-form-item>
         <el-form-item label="备注">
-          <el-input v-model="recordForm.remark" type="textarea" :rows="2"/>
+          <el-input v-model="recordForm.remark" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
 

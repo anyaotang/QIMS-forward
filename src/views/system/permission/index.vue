@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {extractData} from '@/utils/request'
-import {permissionApi, type MenuForm} from '@/api/permission'
-import type {MenuDTO} from '@/types/api'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { extractData } from '@/utils/request'
+import { permissionApi, type MenuForm } from '@/api/permission'
+import type { MenuDTO } from '@/types/api'
 import {
   Plus,
   Edit,
@@ -38,24 +38,38 @@ const formData = reactive<MenuForm>({
 })
 
 const rules = {
-  name: [{required: true, message: '请输入名称', trigger: 'blur'}],
-  code: [{required: true, message: '请输入权限编码', trigger: 'blur'}],
-  type: [{required: true, message: '请选择类型', trigger: 'change'}],
+  name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
+  code: [{ required: true, message: '请输入权限编码', trigger: 'blur' }],
+  type: [{ required: true, message: '请选择类型', trigger: 'change' }],
 }
 
 // 权限类型选项
 const typeOptions = [
-  {label: '菜单', value: 1},
-  {label: '按钮', value: 2},
+  { label: '菜单', value: 1 },
+  { label: '按钮', value: 2 },
 ]
 
 // 图标选项
 const iconOptions = [
-  'Setting', 'User', 'OfficeBuilding', 'Key',
-  'Connection', 'DocumentChecked', 'List', 'Edit',
-  'TrendCharts', 'Tickets', 'ChatDotRound',
-  'DataAnalysis', 'DataLine', 'Memo', 'Odometer',
-  'Grid', 'Monitor', 'Document', 'Collection',
+  'Setting',
+  'User',
+  'OfficeBuilding',
+  'Key',
+  'Connection',
+  'DocumentChecked',
+  'List',
+  'Edit',
+  'TrendCharts',
+  'Tickets',
+  'ChatDotRound',
+  'DataAnalysis',
+  'DataLine',
+  'Memo',
+  'Odometer',
+  'Grid',
+  'Monitor',
+  'Document',
+  'Collection',
 ]
 
 // ============ 树形表格 ref ============
@@ -185,7 +199,7 @@ async function handleDelete(row: MenuDTO) {
     ? '该权限下存在子权限，删除后子权限将一并删除，确定继续？'
     : '确定删除该权限？'
 
-  await ElMessageBox.confirm(msg, '提示', {type: 'warning'})
+  await ElMessageBox.confirm(msg, '提示', { type: 'warning' })
   try {
     await permissionApi.delete(row.id)
     ElMessage.success('删除成功')
@@ -197,7 +211,7 @@ async function handleDelete(row: MenuDTO) {
 
 // 获取类型标签样式
 function getTypeTagType(type: number) {
-  return type === 1 ? '' : 'info'
+  return type === 1 ? 'primary' : 'info'
 }
 
 function getTypeLabel(type: number) {
@@ -234,7 +248,7 @@ function getStatusLabel(status: number) {
             @keyup.enter="onSearch"
           >
             <template #prefix>
-              <el-icon><Search/></el-icon>
+              <el-icon><Search /></el-icon>
             </template>
           </el-input>
         </el-form-item>
@@ -261,12 +275,12 @@ function getStatusLabel(status: number) {
       >
         <el-table-column prop="name" label="权限名称" min-width="200" show-overflow-tooltip>
           <template #default="{ row }">
-            <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px">
               <el-icon v-if="row.type === 1" size="16" color="#409eff">
-                <MenuIcon/>
+                <MenuIcon />
               </el-icon>
               <el-icon v-else size="14" color="#909399">
-                <Grid/>
+                <Grid />
               </el-icon>
               <span>{{ row.name }}</span>
             </div>
@@ -281,32 +295,29 @@ function getStatusLabel(status: number) {
           </template>
         </el-table-column>
 
-        <el-table-column prop="code" label="权限编码" min-width="150" show-overflow-tooltip/>
+        <el-table-column prop="code" label="权限编码" min-width="150" show-overflow-tooltip />
 
         <el-table-column prop="path" label="路由路径" min-width="140" show-overflow-tooltip>
           <template #default="{ row }">
-            <span v-if="row.path" style="font-family: monospace; font-size: 13px; color: #409eff;">
+            <span v-if="row.path" style="font-family: monospace; font-size: 13px; color: #409eff">
               {{ row.path }}
             </span>
-            <span v-else style="color: #c0c4cc;">-</span>
+            <span v-else style="color: #c0c4cc">-</span>
           </template>
         </el-table-column>
 
         <el-table-column prop="icon" label="图标" width="80" align="center">
           <template #default="{ row }">
             <el-tag v-if="row.icon" size="small" type="info">{{ row.icon }}</el-tag>
-            <span v-else style="color: #c0c4cc;">-</span>
+            <span v-else style="color: #c0c4cc">-</span>
           </template>
         </el-table-column>
 
-        <el-table-column prop="sort" label="排序" width="70" align="center"/>
+        <el-table-column prop="sort" label="排序" width="70" align="center" />
 
         <el-table-column prop="status" label="状态" width="80" align="center">
           <template #default="{ row }">
-            <el-tag
-              :type="getStatusTagType((row as any).status ?? 1)"
-              size="small"
-            >
+            <el-tag :type="getStatusTagType((row as any).status ?? 1)" size="small">
               {{ getStatusLabel((row as any).status ?? 1) }}
             </el-tag>
           </template>
@@ -317,12 +328,8 @@ function getStatusLabel(status: number) {
             <el-button type="primary" link size="small" @click="openAddChild(row)">
               新增子项
             </el-button>
-            <el-button type="primary" link size="small" @click="openEdit(row)">
-              编辑
-            </el-button>
-            <el-button type="danger" link size="small" @click="handleDelete(row)">
-              删除
-            </el-button>
+            <el-button type="primary" link size="small" @click="openEdit(row)"> 编辑 </el-button>
+            <el-button type="danger" link size="small" @click="handleDelete(row)"> 删除 </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -357,14 +364,14 @@ function getStatusLabel(status: number) {
         </el-form-item>
 
         <el-form-item label="权限名称" prop="name">
-          <el-input v-model="formData.name" placeholder="如：用户管理、用户新增"/>
+          <el-input v-model="formData.name" placeholder="如：用户管理、用户新增" />
         </el-form-item>
 
         <el-form-item label="权限编码" prop="code">
           <el-input v-model="formData.code" placeholder="如：user:manage、user:create">
             <template #append>
               <el-tooltip content="编码格式建议：模块:操作，如 user:manage" placement="top">
-                <el-icon><WarningFilled/></el-icon>
+                <el-icon><WarningFilled /></el-icon>
               </el-tooltip>
             </template>
           </el-input>
@@ -373,7 +380,7 @@ function getStatusLabel(status: number) {
         <!-- 菜单类型特有字段 -->
         <template v-if="formData.type === 1">
           <el-form-item label="路由路径">
-            <el-input v-model="formData.path" placeholder="如：/system/user"/>
+            <el-input v-model="formData.path" placeholder="如：/system/user" />
           </el-form-item>
 
           <el-form-item label="图标">
@@ -384,12 +391,7 @@ function getStatusLabel(status: number) {
               filterable
               style="width: 100%"
             >
-              <el-option
-                v-for="icon in iconOptions"
-                :key="icon"
-                :label="icon"
-                :value="icon"
-              />
+              <el-option v-for="icon in iconOptions" :key="icon" :label="icon" :value="icon" />
             </el-select>
           </el-form-item>
         </template>
@@ -397,15 +399,12 @@ function getStatusLabel(status: number) {
         <!-- 按钮类型特有字段 -->
         <template v-if="formData.type === 2">
           <el-form-item label="权限标识">
-            <el-input
-              v-model="formData.permission"
-              placeholder="如：user:create、user:delete"
-            />
+            <el-input v-model="formData.permission" placeholder="如：user:create、user:delete" />
           </el-form-item>
         </template>
 
         <el-form-item label="排序">
-          <el-input-number v-model="formData.sort" :min="0" :max="9999"/>
+          <el-input-number v-model="formData.sort" :min="0" :max="9999" />
         </el-form-item>
 
         <el-form-item label="状态">

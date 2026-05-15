@@ -57,7 +57,7 @@ async function loadTable() {
     const res = await inspectionItemApi.page(queryForm)
     const data = extractData(res)
     tableData.value = data.records
-    total.value = data.total
+    total.value = Number(data.total)
   } finally {
     loading.value = false
   }

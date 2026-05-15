@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {extractData} from '@/utils/request'
-import {roleApi, type RoleForm, type RoleQuery} from '@/api/role'
-import {permissionApi} from '@/api/permission'
-import type {RoleInfo, MenuDTO} from '@/types/api'
-import {useI18n} from 'vue-i18n'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { extractData } from '@/utils/request'
+import { roleApi, type RoleForm, type RoleQuery } from '@/api/role'
+import { permissionApi } from '@/api/permission'
+import type { RoleInfo, MenuDTO } from '@/types/api'
+import { useI18n } from 'vue-i18n'
 import {
   Plus,
   Edit,
@@ -15,7 +15,7 @@ import {
   WarningFilled,
 } from '@element-plus/icons-vue'
 
-const {t} = useI18n()
+const { t } = useI18n()
 
 // ============ 状态 ============
 const loading = ref(false)
@@ -43,10 +43,12 @@ const formData = reactive<RoleForm>({
 })
 
 const rules = computed(() => ({
-  name: [{required: true, message: t('role.namePlaceholder'), trigger: 'blur'}],
-  code: [{required: true, message: t('role.codePlaceholder'), trigger: 'blur'},
-    {pattern: /^[a-zA-Z][a-zA-Z0-9_-]*$/, message: t('role.codeRuleHint'), trigger: 'blur'}],
-  status: [{required: true, message: t('role.status'), trigger: 'change'}],
+  name: [{ required: true, message: t('role.namePlaceholder'), trigger: 'blur' }],
+  code: [
+    { required: true, message: t('role.codePlaceholder'), trigger: 'blur' },
+    { pattern: /^[a-zA-Z][a-zA-Z0-9_-]*$/, message: t('role.codeRuleHint'), trigger: 'blur' },
+  ],
+  status: [{ required: true, message: t('role.status'), trigger: 'change' }],
 }))
 
 // 权限配置弹窗
@@ -60,10 +62,10 @@ const currentPermRoleId = ref<number>(null!)
 
 // 数据范围选项
 const dataScopeOptions = computed(() => [
-  {label: t('role.dataScopeAll'), value: 1},
-  {label: t('role.dataScopeDept'), value: 2},
-  {label: t('role.dataScopeDeptAndSub'), value: 3},
-  {label: t('role.dataScopeSelf'), value: 4},
+  { label: t('role.dataScopeAll'), value: 1 },
+  { label: t('role.dataScopeDept'), value: 2 },
+  { label: t('role.dataScopeDeptAndSub'), value: 3 },
+  { label: t('role.dataScopeSelf'), value: 4 },
 ])
 
 // ============ 生命周期 ============
@@ -76,9 +78,9 @@ async function loadData() {
   loading.value = true
   try {
     const res = await roleApi.page(queryParams)
-    const pageData = extractData(res)
-    tableData.value = pageData?.records || []
-    total.value = Number(pageData?.total) || 0
+    const data = extractData(res)
+    tableData.value = data.records
+    total.value = Number(data.total)
   } catch (e) {
     console.error('[Role] 加载角色列表失败:', e)
     ElMessage.error(t('common.error'))
@@ -164,9 +166,13 @@ async function handleSave() {
 // ============ 删除 ============
 async function handleDelete(row: RoleInfo) {
   await ElMessageBox.confirm(
-    t('role.deleteConfirm', {name: row.name}),
+    t('role.deleteConfirm', { name: row.name }),
     t('common.confirmDelete'),
-    {type: 'warning', confirmButtonText: t('common.confirm'), cancelButtonText: t('common.cancel')}
+    {
+      type: 'warning',
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+    },
   )
   try {
     await roleApi.delete(row.id)
@@ -180,7 +186,7 @@ async function handleDelete(row: RoleInfo) {
 // ============ 权限配置 ============
 async function openPermissionConfig(row: RoleInfo) {
   currentPermRoleId.value = row.id
-  permDialogTitle.value = t('role.assignPermissionTitle', {name: row.name})
+  permDialogTitle.value = t('role.assignPermissionTitle', { name: row.name })
   permDialogVisible.value = true
   permLoading.value = true
 
@@ -223,13 +229,17 @@ async function toggleStatus(row: RoleInfo) {
   const actionText = newStatus === 1 ? t('role.enable') : t('role.disable')
 
   await ElMessageBox.confirm(
-    t('role.toggleConfirm', {action: actionText, name: row.name}),
+    t('role.toggleConfirm', { action: actionText, name: row.name }),
     t('common.warning'),
-    {type: 'warning', confirmButtonText: t('common.confirm'), cancelButtonText: t('common.cancel')}
+    {
+      type: 'warning',
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+    },
   )
 
   try {
-    await roleApi.update({...row, status: newStatus})
+    await roleApi.update({ ...row, status: newStatus })
     ElMessage.success(`${actionText}${t('common.success')}`)
     loadData()
   } catch {
@@ -247,7 +257,7 @@ function getStatusLabel(status: number) {
 }
 
 function getDataScopeLabel(scope: number) {
-  const opt = dataScopeOptions.find(o => o.value === scope)
+  const opt = dataScopeOptions.value.find((o) => o.value === scope)
   return opt?.label ?? '-'
 }
 </script>
@@ -272,12 +282,14 @@ function getDataScopeLabel(scope: number) {
             @keyup.enter="onSearch"
           >
             <template #prefix>
-              <el-icon><Search/></el-icon>
+              <el-icon><Search /></el-icon>
             </template>
           </el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="onSearch">{{ t('common.search') }}</el-button>
+          <el-button type="primary" :icon="Search" @click="onSearch">{{
+            t('common.search')
+          }}</el-button>
           <el-button :icon="Refresh" @click="onReset">{{ t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
@@ -288,15 +300,25 @@ function getDataScopeLabel(scope: number) {
       <el-table :data="tableData" v-loading="loading" stripe border>
         <el-table-column prop="code" :label="t('role.code')" width="160" show-overflow-tooltip>
           <template #default="{ row }">
-            <span style="font-family: monospace; font-size: 13px; color: #409eff;">
+            <span style="font-family: monospace; font-size: 13px; color: #409eff">
               {{ row.code }}
             </span>
           </template>
         </el-table-column>
 
-        <el-table-column prop="name" :label="t('role.name')" min-width="140" show-overflow-tooltip/>
+        <el-table-column
+          prop="name"
+          :label="t('role.name')"
+          min-width="140"
+          show-overflow-tooltip
+        />
 
-        <el-table-column prop="remark" :label="t('role.description')" min-width="200" show-overflow-tooltip>
+        <el-table-column
+          prop="remark"
+          :label="t('role.description')"
+          min-width="200"
+          show-overflow-tooltip
+        >
           <template #default="{ row }">
             <span>{{ row.remark || '-' }}</span>
           </template>
@@ -320,14 +342,20 @@ function getDataScopeLabel(scope: number) {
           </template>
         </el-table-column>
 
-        <el-table-column prop="createTime" :label="t('role.createTime')" width="170"/>
+        <el-table-column prop="createTime" :label="t('role.createTime')" width="170" />
 
         <el-table-column :label="t('common.operator')" width="220" fixed="right" align="center">
           <template #default="{ row }">
             <el-button type="primary" link size="small" :icon="Edit" @click="openEdit(row)">
               {{ t('common.edit') }}
             </el-button>
-            <el-button type="primary" link size="small" :icon="Setting" @click="openPermissionConfig(row)">
+            <el-button
+              type="primary"
+              link
+              size="small"
+              :icon="Setting"
+              @click="openPermissionConfig(row)"
+            >
               {{ t('role.assignPermission') }}
             </el-button>
             <el-button type="danger" link size="small" :icon="Delete" @click="handleDelete(row)">
@@ -361,14 +389,14 @@ function getDataScopeLabel(scope: number) {
     >
       <el-form ref="formRef" :model="formData" :rules="rules" label-width="100px">
         <el-form-item :label="t('role.name')" prop="name">
-          <el-input v-model="formData.name" :placeholder="t('role.namePlaceholder')"/>
+          <el-input v-model="formData.name" :placeholder="t('role.namePlaceholder')" />
         </el-form-item>
 
         <el-form-item :label="t('role.code')" prop="code">
           <el-input v-model="formData.code" :placeholder="t('role.codePlaceholder')">
             <template #append>
               <el-tooltip :content="t('role.codeRuleHint')" placement="top">
-                <el-icon><WarningFilled/></el-icon>
+                <el-icon><WarningFilled /></el-icon>
               </el-tooltip>
             </template>
           </el-input>
@@ -382,7 +410,11 @@ function getDataScopeLabel(scope: number) {
         </el-form-item>
 
         <el-form-item :label="t('role.dataScope')">
-          <el-select v-model="formData.dataScope" :placeholder="t('role.dataScope')" style="width: 100%">
+          <el-select
+            v-model="formData.dataScope"
+            :placeholder="t('role.dataScope')"
+            style="width: 100%"
+          >
             <el-option
               v-for="opt in dataScopeOptions"
               :key="opt.value"
@@ -409,13 +441,8 @@ function getDataScopeLabel(scope: number) {
     </el-dialog>
 
     <!-- 权限配置弹窗 -->
-    <el-dialog
-      v-model="permDialogVisible"
-      :title="permDialogTitle"
-      width="560px"
-      destroy-on-close
-    >
-      <div v-loading="permLoading" style="min-height: 300px;">
+    <el-dialog v-model="permDialogVisible" :title="permDialogTitle" width="560px" destroy-on-close>
+      <div v-loading="permLoading" style="min-height: 300px">
         <el-tree
           ref="permTreeRef"
           :data="permTreeData"
@@ -426,19 +453,18 @@ function getDataScopeLabel(scope: number) {
           check-strictly
           :default-checked-keys="permCheckedKeys"
           highlight-current
-          style="border: 1px solid #ebeef5; border-radius: 6px; padding: 12px;"
+          style="border: 1px solid #ebeef5; border-radius: 6px; padding: 12px"
         >
           <template #default="{ data }">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <el-tag
-                :type="data.type === 1 ? undefined : 'info'"
-                size="small"
-                effect="plain"
-              >
+            <div style="display: flex; align-items: center; gap: 8px">
+              <el-tag :type="data.type === 1 ? undefined : 'info'" size="small" effect="plain">
                 {{ data.type === 1 ? '菜单' : '按钮' }}
               </el-tag>
               <span>{{ data.name }}</span>
-              <span v-if="data.code" style="color: #909399; font-size: 12px; font-family: monospace;">
+              <span
+                v-if="data.code"
+                style="color: #909399; font-size: 12px; font-family: monospace"
+              >
                 ({{ data.code }})
               </span>
             </div>

@@ -36,7 +36,7 @@ export interface LoginVO {
 
 // ============ 用户 ============
 export interface UserInfo {
-  userId: number
+  id: string
   username: string
   nickname?: string
   email?: string
@@ -256,12 +256,12 @@ export interface ReportQuery extends PageQuery {
 // ============ 实施方案 ============
 export interface ImplementationPlan {
   id?: number
-  name?: string          // 对应数据库字段 name
+  name?: string // 对应数据库字段 name
   description?: string
-  deadline?: string      // 对应数据库字段 deadline（日期）
-  responsible?: string  // 对应数据库字段 responsible（负责人）
-  parentId?: number     // 对应数据库字段 parent_id（父方案ID）
-  status?: number       // 0=未开始, 1=进行中, 2=已完成
+  deadline?: string // 对应数据库字段 deadline（日期）
+  responsible?: string // 对应数据库字段 responsible（负责人）
+  parentId?: number // 对应数据库字段 parent_id（父方案ID）
+  status?: number // 0=未开始, 1=进行中, 2=已完成
   feedback?: string
   feedbackTime?: string
   nodeId?: number
